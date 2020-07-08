@@ -85,6 +85,7 @@ public class WeaponController : MonoBehaviour
     private RawImage Hitmarker;
     private GameObject Crosshair;
 
+    [SerializeField]
     private TMPro.TextMeshProUGUI AmmoText;
 
     [Header("Prefab References")]
@@ -97,6 +98,7 @@ public class WeaponController : MonoBehaviour
     /***************************************/
 
     private bool playerControl = true;
+    private bool Active = false;
 
     // Recoil
     private bool recoilReset = true;
@@ -147,8 +149,12 @@ public class WeaponController : MonoBehaviour
 
     private Transform tempReload = null;
 
+    private bool reloadAds = false;
+
     // Audio
     private bool noAmmoPlay = true;
+
+    private bool Started = false;
 
     [PunRPC]
     private void ActivateMuzzleFlash()
@@ -178,8 +184,83 @@ public class WeaponController : MonoBehaviour
 
     void OnEnable()
     {
-        if(AmmoText)
-            UpdateWeaponUI();
+        Active = false;
+    }
+
+    public void WeaponSwap(bool active)
+    {
+        if (Active == active) return;
+
+        if (active)
+        {
+            if (Started)
+            {
+                UpdateWeaponUI();
+
+                if (player.playerADS)
+                {
+                    triggerADS = true;
+                }
+                player.playerReload = false;
+            }
+        }
+        else
+        {
+            if (Started)
+            {
+                ADSToggled = false;
+                triggerUnADS = false;
+
+                ads = false;
+                adsDone = false;
+
+                player.FPSCamera.cullingMask = defualtMask;
+
+                //
+                CameraPivot.localPosition = initCameraPos;
+                adsDone = true;
+
+                forwardOffset = ForwardOffset;
+
+                Crosshair.SetActive(false);
+
+                //
+                if (reloading)
+                {
+                    reloading = false;
+                    playerAnim.SetFloat("ReloadTime", -1.0f);
+                    reloadTime = 0.0f;
+
+                    GunMagazine.parent = WeaponPivot;
+                    GunMagazine.localPosition = new Vector3(0.0f, 0.1f, 0.0f);
+                    GunMagazine.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
+                    GunMagazine.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+                    GunMagazine = tempReload;
+                }
+
+                //
+                canShoot = true;
+                currFireCooldown = fireCooldown;
+                //player.playerADS = false;
+                HeldDown = false;
+                framesHeld = 0.0f;
+
+                recoilReset = true;
+                RecoilVector = Vector3.zero;
+                weaponShift = 0.0f;
+
+                releaseTime = 0.0f;
+                recentlyReleased = false;
+                currFireCooldown = fireCooldown;
+
+                player.playerReload = false;
+            }
+        }
+    }
+
+    void OnDisable()
+    {
+        Active = false;
     }
 
     void Start()
@@ -213,7 +294,7 @@ public class WeaponController : MonoBehaviour
         Crosshair = player.Crosshair;
         Hitmarker = player.Hitmarker.GetComponent<RawImage>();
 
-        //Crosshair = GameObject.Find("Crosshair");
+        Started = true;
     }
     
     void Update()
@@ -250,6 +331,8 @@ public class WeaponController : MonoBehaviour
             }
             else
             {
+                reloadAds = player.playerADS;
+
                 triggerReload = false;
                 reloading = true;
 
@@ -264,6 +347,9 @@ public class WeaponController : MonoBehaviour
                 playerAnim.SetFloat("ReloadSpeed", 1.0f / ReloadSpeed);
 
                 Crosshair.SetActive(false);
+
+                player.playerReload = true;
+                player.handIK.LeftIK = 0.0f;
             }
         }
 
@@ -279,10 +365,6 @@ public class WeaponController : MonoBehaviour
                 playerAnim.SetFloat("ReloadTime", -1.0f);
                 reloadTime = 0.0f;
 
-                Crosshair.SetActive(true);
-
-                //playerAnim.speed = 1.0f;
-
                 GunMagazine.parent = WeaponPivot;
                 GunMagazine.localPosition = new Vector3(0.0f, 0.1f, 0.0f);
                 GunMagazine.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
@@ -291,11 +373,24 @@ public class WeaponController : MonoBehaviour
 
                 int mag = MagSize;
                 reserveAmmo += mag;
-                MagSize = Mathf.Clamp(reserveAmmo, 0, magSize); //magSize;
-                reserveAmmo -= MagSize;// magSize - mag;
+                MagSize = Mathf.Clamp(reserveAmmo, 0, magSize);
+                reserveAmmo -= MagSize;
                 ClipCount--;
 
                 UpdateWeaponUI();
+
+                if (reloadAds && Input.GetMouseButton(1))
+                {
+                    triggerADS = true;
+                    reloadAds = false;
+                }
+                else
+                {
+                    Crosshair.SetActive(true);
+                }
+
+                player.playerReload = false;
+                player.handIK.LeftIK = 0.45f;
             }
         }
 

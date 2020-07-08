@@ -5,16 +5,20 @@ public class GameController : MonoBehaviourPunCallbacks
 {
     public Transform[] spawnPoints;
 
-    void Start()
+    void Awake()
     {
-        if(!GameObject.Find("Game"))
+        if (!GameObject.Find("Game"))
         {
             GameObject obj = new GameObject("Game");
             obj.AddComponent<Game>();
 
             Game.Instance.Networked = false;
         }
+    }
 
+    void Start()
+    {
+        Debug.Log("Create PLayer? " + Game.Instance.Networked.ToString());
         if (Game.Instance.Networked)
             CreatePlayer();
     }

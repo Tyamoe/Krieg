@@ -15,8 +15,8 @@ public class HandIK : MonoBehaviour
     public Transform rightHandObj = null;
     public Transform lookObj = null;
 
-    public float PositionIK = 0.5f;
-    public float RotationIK = 0.5f;
+    public float LeftIK = 0.45f;
+    public float RightIK = 0.45f;
 
     void OnAnimatorIK()
     {
@@ -33,15 +33,15 @@ public class HandIK : MonoBehaviour
                 
                 if (rightHandObj != null)
                 {
-                    playerAnim.SetIKPositionWeight(AvatarIKGoal.RightHand, PositionIK);
-                    playerAnim.SetIKRotationWeight(AvatarIKGoal.RightHand, RotationIK);
+                    playerAnim.SetIKPositionWeight(AvatarIKGoal.RightHand, RightIK);
+                    playerAnim.SetIKRotationWeight(AvatarIKGoal.RightHand, RightIK);
                     playerAnim.SetIKPosition(AvatarIKGoal.RightHand, rightHandObj.position);
                     playerAnim.SetIKRotation(AvatarIKGoal.RightHand, rightHandObj.rotation);
                 }
                 if (leftHandObj != null)
                 {
-                    playerAnim.SetIKPositionWeight(AvatarIKGoal.LeftHand, PositionIK);
-                    playerAnim.SetIKRotationWeight(AvatarIKGoal.LeftHand, RotationIK);
+                    playerAnim.SetIKPositionWeight(AvatarIKGoal.LeftHand, LeftIK);
+                    playerAnim.SetIKRotationWeight(AvatarIKGoal.LeftHand, LeftIK);
                     playerAnim.SetIKPosition(AvatarIKGoal.LeftHand, leftHandObj.position);
                     playerAnim.SetIKRotation(AvatarIKGoal.LeftHand, leftHandObj.rotation);
                 }

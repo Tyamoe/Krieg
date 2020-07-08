@@ -23,6 +23,9 @@ public class PlayerController : MonoBehaviour
     [Header("Variables/PvP")]
     public int Health = 100;
 
+    [Header("References/Audio")]
+    public AudioSource audioSource;
+
     private GameObject InGameUI;
     private GameObject SettingsUI;
 
@@ -140,6 +143,35 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private float masterVolume;
+    public float MasterVolume
+    {
+        get { return masterVolume; }
+        set
+        {
+            if (masterVolume == value) return;
+
+            masterVolume = value;
+            AudioListener.volume = value / 10.0f;
+            if (!Started)
+                settingsFuncs.MasterSlider.value = value;
+        }
+    }
+
+    private float uiVolume;
+    public float UIVolume
+    {
+        get { return uiVolume / 10.0f; }
+        set
+        {
+            if (uiVolume == value) return;
+
+            uiVolume = value;
+            if (!Started)
+                settingsFuncs.UISlider.value = value;
+        }
+    }
+
     [Header("Variables/Movement")]
     public float PlayerSpeed = 20.0f;
     public float PlayerSprintSpeed = 4.0f;
@@ -183,20 +215,23 @@ public class PlayerController : MonoBehaviour
 
     [HideInInspector]
     public bool playerADS = false;
+    public bool playerReload = false;
 
     private bool Started = false;
 
     //[HideInInspector]
     public GameController gameCtrl;
 
-    void Start()
+    void Awake()
     {
-        if(!photonView.IsMine && Game.Instance.Networked)
+        if (!photonView.IsMine && Game.Instance.Networked)
         {
             FPSCamera.enabled = false;
             EnvCamera.enabled = false;
 
-            foreach(GameObject obj in Meshes)
+            FPSCamera.GetComponent<AudioListener>().enabled = false;
+
+            foreach (GameObject obj in Meshes)
             {
                 obj.layer = LayerMask.NameToLayer("Default");
             }
@@ -205,34 +240,19 @@ public class PlayerController : MonoBehaviour
 
             return;
         }
+        else
+        {
+            FPSCamera.enabled = true;
+            EnvCamera.enabled = true;
+
+            FPSCamera.GetComponent<AudioListener>().enabled = true;
+        }
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
-        /*cam.SensitivityX = SensitivityX;
-        cam.SensitivityY = SensitivityY;
-        cam.ADSSensitivityX = ADSSensitivityX;
-        cam.ADSSensitivityY = ADSSensitivityY;
-
-        FPSCamera.fieldOfView = FOV;
-        EnvCamera.fieldOfView = FOV;*/
-
-        //----------------------------
-
-        toggleADS = false;
-        toggleCrouch = false;
-        SensitivityX = 2.0f;
-        SensitivityY = 2.0f;
-        ADSMultiplierX = 1.0f;
-        ADSMultiplierY = 1.0f;
-        FOV = 70.0f;
-
-        //----------------------------
-
         player = GetComponent<CharacterController>();
         handIK = GetComponent<HandIK>();
-
-        PlayerVelocity = Vector3.zero;
 
         InGameUI = PlayerUI.transform.Find("InGame").gameObject;
         SettingsUI = PlayerUI.transform.Find("Settings").gameObject;
@@ -241,7 +261,31 @@ public class PlayerController : MonoBehaviour
         Crosshair = InGameUI.transform.Find("Crosshair").gameObject;
         AmmoText = InGameUI.transform.Find("Ammo").gameObject.GetComponent<TMPro.TextMeshProUGUI>();
         DebugText = InGameUI.transform.Find("Debug").gameObject.GetComponent<TMPro.TextMeshProUGUI>();
+    }
 
+    void Start()
+    {
+        if(!photonView.IsMine && Game.Instance.Networked)
+        {
+            return;
+        }
+
+        //----------------------------
+
+        toggleADS = false;
+        toggleCrouch = false;
+        SensitivityX = 1.0f;
+        SensitivityY = 1.0f;
+        ADSMultiplierX = 1.0f;
+        ADSMultiplierY = 1.0f;
+        FOV = 70.0f;
+
+        MasterVolume = 6.0f;
+        UIVolume = 10.0f;
+
+        //----------------------------
+
+        PlayerVelocity = Vector3.zero;
         DebugText.text = "Send Rate: " + PhotonNetwork.SendRate + " Serialize Rate: " + PhotonNetwork.SerializationRate;
 
         SettingsUI.SetActive(false);
@@ -271,7 +315,7 @@ public class PlayerController : MonoBehaviour
             if(SettingsOpen)
             {
                 Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.Confined;
+                Cursor.lockState = CursorLockMode.Locked;
             }
             else
             {
@@ -381,12 +425,12 @@ public class PlayerController : MonoBehaviour
         }
 
         // Weapon Change
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (Input.GetKeyDown(KeyCode.Alpha1) && !playerReload)
         {
+            weapons.weapons[0].WeaponSwap(true);
             weapons.weapons[0].gameObject.SetActive(true);
+            weapons.weapons[1].WeaponSwap(false);
             weapons.weapons[1].gameObject.SetActive(false);
-
-            //weapons.weapons[0].UpdateWeaponUI();
 
             handIK.leftHandObj = weapons.weapons[0].Grip;
             handIK.rightHandObj = weapons.weapons[0].Trigger;
@@ -395,12 +439,12 @@ public class PlayerController : MonoBehaviour
                 GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, 0);
 
         }
-        if (Input.GetKeyDown(KeyCode.Alpha2))
+        if (Input.GetKeyDown(KeyCode.Alpha2) && !playerReload)
         {
+            weapons.weapons[0].WeaponSwap(false);
             weapons.weapons[0].gameObject.SetActive(false);
+            weapons.weapons[1].WeaponSwap(true);
             weapons.weapons[1].gameObject.SetActive(true);
-
-            //weapons.weapons[1].UpdateWeaponUI();
 
             handIK.leftHandObj = weapons.weapons[1].Grip;
             handIK.rightHandObj = weapons.weapons[1].Trigger;
@@ -463,6 +507,11 @@ public class PlayerController : MonoBehaviour
             playerAnim.SetBool("Crouching", true);
             player.height = 4.9f;
             player.center = new Vector3(player.center.x, 2.9f, player.center.z);
+
+            if(!playerReload)
+            {
+                handIK.LeftIK = 0.5f;
+            }
         }
         else
         {
@@ -471,6 +520,11 @@ public class PlayerController : MonoBehaviour
 
             player.height = 8.0f;
             player.center = new Vector3(player.center.x, 4.0f, player.center.z);
+
+            if (!playerReload)
+            {
+                handIK.LeftIK = 0.45f;
+            }
         }
     }
 
