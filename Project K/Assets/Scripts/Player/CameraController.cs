@@ -56,7 +56,7 @@ public class CameraController : MonoBehaviour
             if (SensitivityX_ == value * 100.0f) return;
 
             SensitivityX_ = value * 100.0f;
-            Debug.Log("Sens X: " + value);
+            //Debug.Log("Sens X: " + value);
         }
     }
 

@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Photon.Pun;
 using TMPro;
 
 public class PlayerSettingsFunctions : MonoBehaviour
 {
     public PlayerController player;
+
+    [Header("General")]
+    public GameObject SaveSettingsButton;
 
     [Header("Tabs")]
     public GameObject GameplayTabButton;
@@ -71,24 +75,213 @@ public class PlayerSettingsFunctions : MonoBehaviour
     public TextMeshProUGUI RenderDisplay;
     public TextMeshProUGUI ShadowDisplay;
 
-    //
-    private float brightness = 0.0f;
-    private float resolution = 0.0f;
+    [Header("Ref")]
+    public RenderController renderCtrl;
 
-    private int modelQuality = -1;
-    private int textureQuality = -1;
-    private int MSAA = -1;
-    private int Anis = -1;
+    struct Settings
+    {
+        // Gameplay
+        public float fov;
+        public float brightness;
+
+        public float SensitivityX;
+        public float SensitivityY;
+        public float ADSMultiplierX;
+        public float ADSMultiplierY;
+
+        public bool toggleADS;
+        public bool toggleCrouch;
+
+        // Audio
+        public float masterVolume;
+        public float uiVolume;
+
+        // Performance
+        public float resolutionScale;
+        public bool toggleVSync;
+
+        public float renderDistance;
+        public int modelQuality;
+        public int textureQuality;
+        public int shadows;
+        public int shadowQuality;
+        public int MSAA;
+        public int anisotropicFiltering;
+        public float shadowDistance;
+        public int shadowCascades;
+
+        public bool ambientOcclusion;
+        public bool DOF;
+    }
+
+    Settings settings;
+
+    bool Started = false;
+
+    private void Awake()
+    {
+        settings = new Settings();
+    }
 
     void Start()
     {
         LoadSaved();
         GameplayTab();
+        Started = true;
+    }
+
+    private void OnDisable()
+    {
+        Started = false;
+        LoadSaved();
+        Started = true;
+    }
+
+    private void OnEnable()
+    {
+        Vector3 v = GameplayTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+        GameplayTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+
+        v = AudioTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+        AudioTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+
+        v = KeybindTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+        KeybindTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+
+        v = PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+        PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+
     }
 
     void LoadSaved()
     {
+        // Gameplay
+        settings.fov = PlayerPrefs.GetFloat("fov", 75);
+        settings.brightness = PlayerPrefs.GetFloat("brightness", 70);
 
+        settings.SensitivityX = PlayerPrefs.GetFloat("SensitivityX", 1.0f);
+        settings.SensitivityY = PlayerPrefs.GetFloat("SensitivityY", 1.0f);
+        settings.ADSMultiplierX = PlayerPrefs.GetFloat("ADSMultiplierX", 1.0f);
+        settings.ADSMultiplierY = PlayerPrefs.GetFloat("ADSMultiplierY", 1.0f);
+
+        settings.toggleADS = PlayerPrefs.GetInt("toggleADS", 0) == 0 ? false : true;
+        settings.toggleCrouch = PlayerPrefs.GetInt("toggleCrouch", 0) == 0 ? false : true;
+
+        // Set UI Elements
+        FovSlider.value = settings.fov;
+        BrightnessSlider.value = settings.brightness;
+
+        SensXSlider.value = settings.SensitivityX;
+        SensYSlider.value = settings.SensitivityY;
+        MultiXSlider.value = settings.ADSMultiplierX;
+        MultiYSlider.value = settings.ADSMultiplierY;
+
+        ADSToggle.isOn = settings.toggleADS;
+        CrouchToggle.isOn = settings.toggleCrouch;
+
+        //-----------------------------------------------------------------//
+        //*****************************************************************//
+        //-----------------------------------------------------------------//
+
+        // Audio
+        settings.masterVolume = PlayerPrefs.GetFloat("masterVolume", 0.6f);
+        settings.uiVolume = PlayerPrefs.GetFloat("uiVolume", 1.0f);
+
+        // Set UI Elements
+        MasterSlider.value = settings.masterVolume;
+        UISlider.value = settings.uiVolume;
+
+        //-----------------------------------------------------------------//
+        //*****************************************************************//
+        //-----------------------------------------------------------------//
+
+        // Performance
+        settings.resolutionScale = PlayerPrefs.GetFloat("resolutionScale", 8.0f);
+        settings.toggleVSync = PlayerPrefs.GetInt("toggleVSync", 1) == 0 ? false : true;
+        settings.renderDistance = PlayerPrefs.GetFloat("renderDistance", 600.0f);
+
+        settings.modelQuality = PlayerPrefs.GetInt("modelQuality", 1);
+        settings.textureQuality = PlayerPrefs.GetInt("textureQuality", 2);
+        settings.shadows = PlayerPrefs.GetInt("shadows", 1);
+        settings.shadowQuality = PlayerPrefs.GetInt("shadowQuality", 1);
+        settings.MSAA = PlayerPrefs.GetInt("MSAA", 2);
+        settings.anisotropicFiltering = PlayerPrefs.GetInt("anisotropicFiltering", 1);
+        settings.shadowDistance = PlayerPrefs.GetFloat("shadowDistance", 400.0f);
+        settings.shadowCascades = PlayerPrefs.GetInt("shadowCascades", 4);
+
+        settings.ambientOcclusion = PlayerPrefs.GetInt("ambientOcclusion", 0) == 0 ? false : true;
+        settings.DOF = PlayerPrefs.GetInt("DOF", 0) == 0 ? false : true;
+
+        // Set UI Elements
+        ResolutionSlider.value = settings.resolutionScale;
+        VSyncToggle.isOn = settings.toggleVSync;
+        RenderSlider.value = settings.renderDistance;
+
+        ChangeModelQuality(settings.modelQuality);
+        ChangeTextureQuality(settings.textureQuality);
+        ChangeShadowQuality(settings.shadows);
+        ChangeShadowQuality2(settings.shadowQuality);
+        ChangeMSAA(settings.MSAA);
+        ChangeAnis(settings.anisotropicFiltering);
+
+        ShadowSlider.value = settings.shadowDistance;
+
+        ChangeShadowCascades(settings.shadowCascades);
+
+        AmbientOcToggle.isOn = settings.ambientOcclusion;
+        DepthOfFieldToggle.isOn = settings.DOF;
+
+        //-----------------------------------------------------------------//
+        //*****************************************************************//
+        //-----------------------------------------------------------------//
+
+        SaveSettingsButton.GetComponent<Image>().fillCenter = false;
+        SaveSettingsButton.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
+    }
+
+    public void SaveSettings()
+    {
+        // Gameplay
+        PlayerPrefs.SetFloat("fov", settings.fov);
+        PlayerPrefs.SetFloat("brightness", settings.brightness);
+
+        PlayerPrefs.SetFloat("SensitivityX", settings.SensitivityX);
+        PlayerPrefs.SetFloat("SensitivityY", settings.SensitivityY);
+        PlayerPrefs.SetFloat("ADSMultiplierX", settings.ADSMultiplierX);
+        PlayerPrefs.SetFloat("ADSMultiplierY", settings.ADSMultiplierY);
+
+        PlayerPrefs.SetInt("toggleADS", settings.toggleADS ? 1 : 0);
+        PlayerPrefs.SetInt("toggleCrouch", settings.toggleCrouch ? 1 : 0);
+
+        // Audio
+        PlayerPrefs.SetFloat("masterVolume", settings.masterVolume);
+        PlayerPrefs.SetFloat("uiVolume", settings.uiVolume);
+
+        // Performance
+        PlayerPrefs.SetFloat("resolutionScale", settings.resolutionScale);
+        PlayerPrefs.SetInt("VSync", settings.toggleVSync ? 1 : 0);
+        PlayerPrefs.SetFloat("renderDistance", settings.renderDistance);
+
+        PlayerPrefs.SetInt("modelQuality", settings.modelQuality);
+        PlayerPrefs.SetInt("textureQuality", settings.textureQuality);
+        PlayerPrefs.SetInt("shadows", settings.shadows);
+        PlayerPrefs.SetInt("shadowQuality", settings.shadowQuality);
+        PlayerPrefs.SetInt("MSAA", settings.MSAA);
+        PlayerPrefs.SetInt("anisotropicFiltering", settings.anisotropicFiltering);
+        PlayerPrefs.SetFloat("shadowDistance", settings.shadowDistance);
+        PlayerPrefs.SetInt("shadowCascades", settings.shadowCascades);
+
+        PlayerPrefs.SetInt("ambientOcclusion", settings.ambientOcclusion ? 1 : 0);
+        PlayerPrefs.SetInt("DOF", settings.DOF ? 1 : 0);
+
+        SaveSettingsButton.GetComponent<Image>().fillCenter = false;
+        SaveSettingsButton.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
+    }
+
+    void SettingsChanged()
+    {
+        SaveSettingsButton.GetComponent<Image>().fillCenter = true;
+        SaveSettingsButton.GetComponentInChildren<TextMeshProUGUI>().color = Color.black;
     }
 
     #region GameplayTab
@@ -96,6 +289,9 @@ public class PlayerSettingsFunctions : MonoBehaviour
     public void GameplayTab()
     {
         GameplayTabPanel.SetActive(true);
+        Vector3 v = GameplayTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+        GameplayTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+
         AudioTabPanel.SetActive(false);
         KeybindTabPanel.SetActive(false);
         PerformanceTabPanel.SetActive(false);
@@ -115,49 +311,93 @@ public class PlayerSettingsFunctions : MonoBehaviour
 
     public void UpdateFOV(Slider inFloat)
     {
-        player.FOV = inFloat.value;
-        FovDisplay.text = inFloat.value.ToString("F0");
+        if(settings.fov != inFloat.value || !Started)
+        {
+            player.FOV = inFloat.value;
+            FovDisplay.text = inFloat.value.ToString("F0");
+
+            settings.fov = inFloat.value;
+            SettingsChanged();
+        }
     }
 
     public void UpdateBrightness(Slider inFloat)
     {
-        brightness = inFloat.value;
-        Screen.brightness = brightness / 100.0f;
-        BrightnessDisplay.text = inFloat.value.ToString("F2");
+        if (settings.brightness != inFloat.value || !Started)
+        {
+            float brightness = inFloat.value;
+            //Screen.brightness = brightness / 100.0f;
+            BrightnessDisplay.text = inFloat.value.ToString("F2");
+
+            RenderSettings.ambientLight = new Color(brightness / 100.0f, brightness / 100.0f, brightness / 100.0f, 1.0f);
+
+            settings.brightness = inFloat.value;
+            SettingsChanged();
+        }
     }
 
     public void UpdateSensitivityX(Slider inFloat)
     {
-        player.SensitivityX = inFloat.value;
-        SensXDisplay.text = inFloat.value.ToString("F2");
+        if (settings.SensitivityX != inFloat.value || !Started)
+        {
+            player.SensitivityX = inFloat.value;
+            SensXDisplay.text = inFloat.value.ToString("F2");
+
+            settings.SensitivityX = inFloat.value;
+            SettingsChanged();
+        }
     }
 
     public void UpdateSensitivityY(Slider inFloat)
     {
-        player.SensitivityY = inFloat.value;
-        SensYDisplay.text = inFloat.value.ToString("F2");
+        if (settings.SensitivityY != inFloat.value || !Started)
+        {
+            player.SensitivityY = inFloat.value;
+            SensYDisplay.text = inFloat.value.ToString("F2");
+
+            settings.SensitivityY = inFloat.value;
+            SettingsChanged();
+        }
     }
 
     public void UpdateADSSensitivityX(Slider inFloat)
     {
-        player.ADSMultiplierX = inFloat.value;
-        MultiXDisplay.text = inFloat.value.ToString("F2");
+        if (settings.ADSMultiplierX != inFloat.value || !Started)
+        {
+            player.ADSMultiplierX = inFloat.value;
+            MultiXDisplay.text = inFloat.value.ToString("F2");
+
+            settings.ADSMultiplierX = inFloat.value;
+            SettingsChanged();
+        }
     }
 
     public void UpdateADSSensitivityY(Slider inFloat)
     {
-        player.ADSMultiplierY = inFloat.value;
-        MultiYDisplay.text = inFloat.value.ToString("F2");
+        if (settings.ADSMultiplierY != inFloat.value || !Started)
+        {
+            player.ADSMultiplierY = inFloat.value;
+            MultiYDisplay.text = inFloat.value.ToString("F2");
+
+            settings.ADSMultiplierY = inFloat.value;
+            SettingsChanged();
+        }
     }
 
     public void UpdateADSTgl(Toggle inBool)
     {
         player.toggleADS = inBool.isOn;
+
+        settings.toggleADS = inBool.isOn;
+        SettingsChanged();
     }
 
     public void UpdateCrouchTgl(Toggle inBool)
     {
         player.toggleCrouch = inBool.isOn;
+
+        settings.toggleCrouch = inBool.isOn;
+        SettingsChanged();
     }
 
     #endregion
@@ -167,6 +407,9 @@ public class PlayerSettingsFunctions : MonoBehaviour
     public void AudioTab()
     {
         AudioTabPanel.SetActive(true);
+        Vector3 v = AudioTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+        AudioTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+
         KeybindTabPanel.SetActive(false);
         PerformanceTabPanel.SetActive(false);
         GameplayTabPanel.SetActive(false);
@@ -188,12 +431,18 @@ public class PlayerSettingsFunctions : MonoBehaviour
     {
         player.MasterVolume = inFloat.value;
         MasterDisplay.text = inFloat.value.ToString("F3");
+
+        settings.masterVolume = inFloat.value;
+        SettingsChanged();
     }
 
     public void UpdateUIVolume(Slider inFloat)
     {
         player.UIVolume = inFloat.value;
         UIDisplay.text = inFloat.value.ToString("F3");
+
+        settings.uiVolume = inFloat.value;
+        SettingsChanged();
     }
 
     #endregion
@@ -203,6 +452,9 @@ public class PlayerSettingsFunctions : MonoBehaviour
     public void KeybindTab()
     {
         KeybindTabPanel.SetActive(true);
+        Vector3 v = KeybindTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+        KeybindTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+
         PerformanceTabPanel.SetActive(false);
         GameplayTabPanel.SetActive(false);
         AudioTabPanel.SetActive(false);
@@ -227,6 +479,9 @@ public class PlayerSettingsFunctions : MonoBehaviour
     public void PerformanceTab()
     {
         PerformanceTabPanel.SetActive(true);
+        Vector3 v = PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+        PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+
         GameplayTabPanel.SetActive(false);
         AudioTabPanel.SetActive(false);
         KeybindTabPanel.SetActive(false);
@@ -254,12 +509,14 @@ public class PlayerSettingsFunctions : MonoBehaviour
         float res = Mathf.Clamp(inFloat.value, 0.0f, 8.0f);
         float x = Mathf.Clamp(inFloat.value - 8.0f, 0.0f, 2.0f);
 
-        resolution = mapToRange(res, 0.0f, 8.0f, 0.0f, 1.0f) + mapToRange(x, 0.0f, 2.0f, 0.0f, 0.5f);
+        float resolution = mapToRange(res, 0.0f, 8.0f, 0.0f, 1.0f) + mapToRange(x, 0.0f, 2.0f, 0.0f, 0.5f);
 
-        int width = Mathf.RoundToInt(Screen.currentResolution.width * resolution);
-        int height = Mathf.RoundToInt(Screen.currentResolution.height * resolution);
+        //int width = Mathf.RoundToInt(Screen.currentResolution.width * resolution);
+        // int height = Mathf.RoundToInt(Screen.currentResolution.height * resolution);
 
-        Screen.SetResolution(width, height, true);
+        //Screen.SetResolution(width, height, true);
+
+        renderCtrl.UpdateResolution(resolution);
         ResolutionDisplay.text = inFloat.value.ToString("F2");
 
         //Debug.Log(QualitySettings.resolutionScalingFixedDPIFactor);
@@ -267,6 +524,9 @@ public class PlayerSettingsFunctions : MonoBehaviour
         //QualitySettings.resolutionScalingFixedDPIFactor = resolution;
 
         //Debug.Log(QualitySettings.resolutionScalingFixedDPIFactor);
+
+        settings.resolutionScale = inFloat.value;
+        SettingsChanged();
     }
 
     public void UpdateVSync(Toggle inBool)
@@ -279,6 +539,9 @@ public class PlayerSettingsFunctions : MonoBehaviour
         {
             QualitySettings.vSyncCount = 0;
         }
+
+        settings.toggleVSync = inBool.isOn;
+        SettingsChanged();
     }
 
     public void UpdateRenderDistance(Slider inFloat)
@@ -286,11 +549,14 @@ public class PlayerSettingsFunctions : MonoBehaviour
         //player.FPSCamera.farClipPlane = inFloat.value;
         player.EnvCamera.farClipPlane = inFloat.value;
         RenderDisplay.text = inFloat.value.ToString("F2");
+
+        settings.renderDistance = inFloat.value;
+        SettingsChanged();
     }
 
     public void ChangeModelQuality(int selection)
     {
-        if(modelQuality != selection)
+        if(settings.modelQuality != selection || !Started)
         {
             Image[] img = ModelQuality.GetComponentsInChildren<Image>();
             TextMeshProUGUI[] txt = ModelQuality.GetComponentsInChildren<TextMeshProUGUI>();
@@ -318,13 +584,15 @@ public class PlayerSettingsFunctions : MonoBehaviour
                     QualitySettings.lodBias = 2.0f;
                     break;
             }
-            modelQuality = selection;
+
+            settings.modelQuality = selection;
+            SettingsChanged();
         }
     }
 
     public void ChangeTextureQuality(int selection)
     {
-        if (textureQuality != selection)
+        if (settings.textureQuality != selection || !Started)
         {
             Image[] img = TextureQuality.GetComponentsInChildren<Image>();
             TextMeshProUGUI[] txt = TextureQuality.GetComponentsInChildren<TextMeshProUGUI>();
@@ -340,73 +608,88 @@ public class PlayerSettingsFunctions : MonoBehaviour
             img[2 - selection].fillCenter = true;
             txt[2 - selection + 1].color = Color.black;
 
-            QualitySettings.masterTextureLimit = textureQuality = selection;
+            QualitySettings.masterTextureLimit = selection;
+
+            settings.textureQuality = selection;
+            SettingsChanged();
         }
     }
 
     public void ChangeShadowQuality(int selection)
     {
-        Image[] img = Shadows.GetComponentsInChildren<Image>();
-        TextMeshProUGUI[] txt = Shadows.GetComponentsInChildren<TextMeshProUGUI>();
-
-        img[0].fillCenter = false;
-        img[1].fillCenter = false;
-        img[2].fillCenter = false;
-
-        txt[1].color = Color.white;
-        txt[2].color = Color.white;
-        txt[3].color = Color.white;
-
-        img[selection].fillCenter = true;
-        txt[selection + 1].color = Color.black;
-
-        switch (selection)
+        if (settings.shadows != selection || !Started)
         {
-            case 0:
-                QualitySettings.shadows = ShadowQuality.Disable;
-                break;
-            case 1:
-                QualitySettings.shadows = ShadowQuality.HardOnly;
-                break;
-            case 2:
-                QualitySettings.shadows = ShadowQuality.All;
-                break;
+            Image[] img = Shadows.GetComponentsInChildren<Image>();
+            TextMeshProUGUI[] txt = Shadows.GetComponentsInChildren<TextMeshProUGUI>();
+
+            img[0].fillCenter = false;
+            img[1].fillCenter = false;
+            img[2].fillCenter = false;
+
+            txt[1].color = Color.white;
+            txt[2].color = Color.white;
+            txt[3].color = Color.white;
+
+            img[selection].fillCenter = true;
+            txt[selection + 1].color = Color.black;
+
+            switch (selection)
+            {
+                case 0:
+                    QualitySettings.shadows = ShadowQuality.Disable;
+                    break;
+                case 1:
+                    QualitySettings.shadows = ShadowQuality.HardOnly;
+                    break;
+                case 2:
+                    QualitySettings.shadows = ShadowQuality.All;
+                    break;
+            }
+
+            settings.shadows = selection;
+            SettingsChanged();
         }
     }
 
     public void ChangeShadowQuality2(int selection)
     {
-        Image[] img = ShadowQual.GetComponentsInChildren<Image>();
-        TextMeshProUGUI[] txt = ShadowQual.GetComponentsInChildren<TextMeshProUGUI>();
-
-        img[0].fillCenter = false;
-        img[1].fillCenter = false;
-        img[2].fillCenter = false;
-
-        txt[1].color = Color.white;
-        txt[2].color = Color.white;
-        txt[3].color = Color.white;
-
-        img[selection].fillCenter = true;
-        txt[selection + 1].color = Color.black;
-
-        switch (selection)
+        if (settings.shadowQuality != selection || !Started)
         {
-            case 0:
-                QualitySettings.shadowResolution = ShadowResolution.Low;
-                break;
-            case 1:
-                QualitySettings.shadowResolution = ShadowResolution.Medium;
-                break;
-            case 2:
-                QualitySettings.shadowResolution = ShadowResolution.High;
-                break;
+            Image[] img = ShadowQual.GetComponentsInChildren<Image>();
+            TextMeshProUGUI[] txt = ShadowQual.GetComponentsInChildren<TextMeshProUGUI>();
+
+            img[0].fillCenter = false;
+            img[1].fillCenter = false;
+            img[2].fillCenter = false;
+
+            txt[1].color = Color.white;
+            txt[2].color = Color.white;
+            txt[3].color = Color.white;
+
+            img[selection].fillCenter = true;
+            txt[selection + 1].color = Color.black;
+
+            switch (selection)
+            {
+                case 0:
+                    QualitySettings.shadowResolution = ShadowResolution.Low;
+                    break;
+                case 1:
+                    QualitySettings.shadowResolution = ShadowResolution.Medium;
+                    break;
+                case 2:
+                    QualitySettings.shadowResolution = ShadowResolution.High;
+                    break;
+            }
+
+            settings.shadowQuality = selection;
+            SettingsChanged();
         }
     }
 
     public void ChangeMSAA(int selection)
     {
-        if (MSAA != selection)
+        if (settings.MSAA != selection || !Started)
         {
             Image[] img = MSAAQuality.GetComponentsInChildren<Image>();
             TextMeshProUGUI[] txt = MSAAQuality.GetComponentsInChildren<TextMeshProUGUI>();
@@ -426,13 +709,16 @@ public class PlayerSettingsFunctions : MonoBehaviour
             img[s].fillCenter = true;
             txt[s + 1].color = Color.black;
 
-            QualitySettings.antiAliasing = MSAA = selection;
+            QualitySettings.antiAliasing = selection;
+
+            settings.MSAA = selection;
+            SettingsChanged();
         }
     }
 
     public void ChangeAnis(int selection)
     {
-        if (Anis != selection)
+        if (settings.anisotropicFiltering != selection || !Started)
         {
             Image[] img = ANISQuality.GetComponentsInChildren<Image>();
             TextMeshProUGUI[] txt = ANISQuality.GetComponentsInChildren<TextMeshProUGUI>();
@@ -460,7 +746,9 @@ public class PlayerSettingsFunctions : MonoBehaviour
                     QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
                     break;
             }
-            Anis = selection;
+
+            settings.anisotropicFiltering = selection;
+            SettingsChanged();
         }
     }
 
@@ -468,68 +756,89 @@ public class PlayerSettingsFunctions : MonoBehaviour
     {
         QualitySettings.shadowDistance = inFloat.value;
         ShadowDisplay.text = inFloat.value.ToString("F2");
+
+        settings.shadowDistance = inFloat.value;
+        SettingsChanged();
     }
 
     public void ChangeShadowCascades(int selection)
     {
-        Image[] img = ShadowCascades.GetComponentsInChildren<Image>();
-        TextMeshProUGUI[] txt = ShadowCascades.GetComponentsInChildren<TextMeshProUGUI>();
+        if (selection != settings.shadowCascades || !Started)
+        {
+            Image[] img = ShadowCascades.GetComponentsInChildren<Image>();
+            TextMeshProUGUI[] txt = ShadowCascades.GetComponentsInChildren<TextMeshProUGUI>();
 
-        int s = selection / 2;
+            int s = selection / 2;
 
-        img[0].fillCenter = false;
-        img[1].fillCenter = false;
-        img[2].fillCenter = false;
+            img[0].fillCenter = false;
+            img[1].fillCenter = false;
+            img[2].fillCenter = false;
 
-        txt[1].color = Color.white;
-        txt[2].color = Color.white;
-        txt[3].color = Color.white;
+            txt[1].color = Color.white;
+            txt[2].color = Color.white;
+            txt[3].color = Color.white;
 
-        img[s].fillCenter = true;
-        txt[s + 1].color = Color.black;
+            img[s].fillCenter = true;
+            txt[s + 1].color = Color.black;
 
-        QualitySettings.shadowCascades = selection;
+            QualitySettings.shadowCascades = selection;
+
+            settings.shadowCascades = selection;
+            SettingsChanged();
+        }
     }
 
     public void UpdateAmbientOc(Toggle inBool)
     {
-        try
+        if (inBool.isOn != settings.ambientOcclusion || !Started)
         {
-            MonoBehaviour tempScript = (MonoBehaviour)player.EnvCamera.GetComponent("AmbientOcclusion");
-            if (inBool.isOn)
+            try
             {
-                tempScript.enabled = true;
+                MonoBehaviour tempScript = (MonoBehaviour)player.EnvCamera.GetComponent("AmbientOcclusion");
+                if (inBool.isOn)
+                {
+                    tempScript.enabled = true;
+                }
+                else
+                {
+                    tempScript.enabled = false;
+                }
+
+                settings.ambientOcclusion = inBool.isOn;
+                SettingsChanged();
             }
-            else
+            catch
             {
-                tempScript.enabled = false;
+                Debug.Log("No AO post processing found");
+                return;
             }
-        }
-        catch
-        {
-            Debug.Log("No AO post processing found");
-            return;
         }
     }
 
     public void UpdateDOF(Toggle inBool)
     {
-        try
+        if(inBool.isOn != settings.DOF || !Started)
         {
-            MonoBehaviour tempScript = (MonoBehaviour)player.EnvCamera.GetComponent("DepthOfField");
-            if (inBool.isOn)
+            try
             {
-                tempScript.enabled = true;
+                MonoBehaviour tempScript = (MonoBehaviour)player.EnvCamera.GetComponent("DepthOfField");
+                if (inBool.isOn)
+                {
+                    tempScript.enabled = true;
+                }
+                else
+                {
+                    tempScript.enabled = false;
+                }
+
+                settings.DOF = inBool.isOn;
+                SettingsChanged();
             }
-            else
+            catch
             {
-                tempScript.enabled = false;
+                Debug.Log("No DOF post processing found");
+                return;
             }
-        }
-        catch
-        {
-            Debug.Log("No DOF post processing found");
-            return;
         }
     }
 

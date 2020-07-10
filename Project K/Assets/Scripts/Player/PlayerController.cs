@@ -272,7 +272,7 @@ public class PlayerController : MonoBehaviour
 
         //----------------------------
 
-        toggleADS = false;
+        /*toggleADS = false;
         toggleCrouch = false;
         SensitivityX = 1.0f;
         SensitivityY = 1.0f;
@@ -282,6 +282,7 @@ public class PlayerController : MonoBehaviour
 
         MasterVolume = 6.0f;
         UIVolume = 10.0f;
+        */
 
         //----------------------------
 
@@ -315,7 +316,7 @@ public class PlayerController : MonoBehaviour
             if(SettingsOpen)
             {
                 Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.lockState = CursorLockMode.None;
             }
             else
             {

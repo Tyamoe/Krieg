@@ -9,13 +9,13 @@ public class MatchController : MonoBehaviourPunCallbacks
 
     public override void OnEnable()
     {
-        Debug.Log("OnEnable");
+        //Debug.Log("OnEnable");
         PhotonNetwork.AddCallbackTarget(this);
     }
 
     public override void OnDisable()
     {
-        Debug.Log("OnDisable");
+        //Debug.Log("OnDisable");
         PhotonNetwork.RemoveCallbackTarget(this);
     }
 

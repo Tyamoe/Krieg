@@ -25,7 +25,7 @@ public class MatchListController : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        PhotonNetwork.NickName = "Player" + UnityEngine.Random.Range(1, 1001);
+        //PhotonNetwork.NickName = "Player" + UnityEngine.Random.Range(1, 1001);
 
         Debug.Log("Name: " + PhotonNetwork.NickName);
     }
