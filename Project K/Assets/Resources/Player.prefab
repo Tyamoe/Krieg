@@ -1520,8 +1520,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 578351969222535798}
-  m_LocalRotation: {x: 0, y: 2.842171e-11, z: -9.0685226e-10, w: 1}
-  m_LocalPosition: {x: 0.00000015739352, y: 1.2099993, z: 11.830124}
+  m_LocalRotation: {x: 0, y: 0, z: -9.531506e-10, w: 1}
+  m_LocalPosition: {x: 0.00000059604645, y: 1.2100005, z: 11.210007}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4225141343904114413}
@@ -6443,8 +6443,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2032864012086863186}
-  m_LocalRotation: {x: 0.7133652, y: 0.001519762, z: -0.006126128, w: 0.7007641}
-  m_LocalPosition: {x: 1.2587409, y: 0.00025716424, z: -0.00017142296}
+  m_LocalRotation: {x: 0.7133652, y: 0.0015197545, z: -0.006126143, w: 0.70076406}
+  m_LocalPosition: {x: 1.2587483, y: 0.00028923154, z: -0.00020045042}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 5019842190308535295}
@@ -7470,7 +7470,7 @@ GameObject:
   - component: {fileID: 8178952661241506943}
   m_Layer: 8
   m_Name: Player
-  m_TagString: Player
+  m_TagString: Self
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -7562,7 +7562,7 @@ MonoBehaviour:
   PlayerControl: 1
   playerADS: 0
   playerReload: 0
-  gameCtrl: {fileID: 0}
+  modeCtrl: {fileID: 0}
 --- !u!95 &671543982828047886
 Animator:
   serializedVersion: 3
@@ -10429,8 +10429,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3290523733550598181}
-  m_LocalRotation: {x: -0.0011829447, y: 0.0000013991985, z: 0.0011829414, w: -0.9999986}
-  m_LocalPosition: {x: -0.017017104, y: 1.2604982, z: 6.5725937}
+  m_LocalRotation: {x: -0.0011829541, y: 0.0000016242265, z: 0.001182941, w: -0.9999986}
+  m_LocalPosition: {x: -0.017027715, y: 1.2604978, z: 6.5725965}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 7074404807747491173}
@@ -14067,7 +14067,7 @@ GameObject:
   - component: {fileID: 2698190453942166913}
   m_Layer: 10
   m_Name: NewChar_Rig_RightForeArm
-  m_TagString: Untagged
+  m_TagString: Self
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -14079,8 +14079,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4497322334375228851}
-  m_LocalRotation: {x: -0.68663186, y: -0.028766632, z: 0.13564938, w: 0.71365845}
-  m_LocalPosition: {x: 3.117727, y: -0.00009563379, z: -0.00024032965}
+  m_LocalRotation: {x: -0.68663204, y: -0.028766096, z: 0.1356489, w: 0.71365845}
+  m_LocalPosition: {x: 3.1177602, y: -0.0001339335, z: -0.00032079965}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 206820746388836964}
@@ -14125,7 +14125,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4506089849837307753}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 6.571, z: 0.161}
+  m_LocalPosition: {x: 0, y: 6.571, z: 0.46}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 7177605950226373078}
@@ -17055,7 +17055,7 @@ GameObject:
   - component: {fileID: 5357411092378471944}
   m_Layer: 10
   m_Name: NewChar_Rig_RightLeg
-  m_TagString: Untagged
+  m_TagString: Self
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -17068,7 +17068,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5469768741523751959}
   m_LocalRotation: {x: 0.0025286342, y: 0.000011578667, z: 0.0008010673, w: 0.9999965}
-  m_LocalPosition: {x: 3.4538505, y: -0.0011841189, z: 0.00066551345}
+  m_LocalPosition: {x: 3.453929, y: -0.0011496749, z: 0.0006649459}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 2162793424638332122}
@@ -19572,8 +19572,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6646310598491340473}
-  m_LocalRotation: {x: 0.7012358, y: 0.16381642, z: 0.16499645, w: 0.67395014}
-  m_LocalPosition: {x: -1.1256617, y: -0.000000010101478, z: 6.3143935e-16}
+  m_LocalRotation: {x: 0.70123607, y: 0.16381669, z: 0.16499582, w: 0.6739499}
+  m_LocalPosition: {x: -1.1256735, y: 0.0000019669533, z: -0.000013828278}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 922849520742550639}
@@ -22800,7 +22800,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7594904178014195679}
   m_LocalRotation: {x: -0.0010703097, y: -0.091038264, z: 0.0012856749, w: 0.995846}
-  m_LocalPosition: {x: 0.48790112, y: 0.13803658, z: 26.486458}
+  m_LocalPosition: {x: 0.48791242, y: 0.13803658, z: 26.487072}
   m_LocalScale: {x: 1.5922282, y: 1.5922277, z: 1.5922276}
   m_Children:
   - {fileID: 6418133401105919482}
@@ -22865,9 +22865,7 @@ MonoBehaviour:
   AmmoText: {fileID: 0}
   MuzzleFlash: {fileID: 31295446539893333, guid: d72e40def8d2f974a89a89ea4b871ee3,
     type: 3}
-  ImpactDust: {fileID: 2721845254008523264, guid: 22e2de48a86fa67499a6b4e0031e8d72,
-    type: 3}
-  BulletImpact: {fileID: 8477446236558398896, guid: 79927596c23303545a3d1d60459335bb,
+  TracerPrefab: {fileID: 6255141788256227024, guid: ed6be96273db107418bd94e7ef546a8f,
     type: 3}
   flashActive: 0
 --- !u!114 &7119696535604706977
@@ -22885,7 +22883,7 @@ MonoBehaviour:
   ObservedComponentsFoldoutOpen: 1
   Group: 0
   prefixField: -1
-  Synchronization: 3
+  Synchronization: 1
   OwnershipTransfer: 0
   ObservedComponents:
   - {fileID: 4873551882005428189}
@@ -23639,7 +23637,7 @@ GameObject:
   - component: {fileID: 105218161812806246}
   m_Layer: 10
   m_Name: NewChar_Rig_LeftLeg
-  m_TagString: Untagged
+  m_TagString: Self
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -23652,7 +23650,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7714008444862140095}
   m_LocalRotation: {x: 0.0025405157, y: 0.000011571597, z: 0.0008174887, w: 0.9999965}
-  m_LocalPosition: {x: -3.488131, y: 0.0008366108, z: 0.00031824847}
+  m_LocalPosition: {x: -3.488321, y: 0.00076031685, z: 0.00042075664}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 9023436455002474707}
@@ -24467,7 +24465,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8054165806599633618}
   m_LocalRotation: {x: -0.0010216464, y: -0.0864462, z: 0.00132499, w: 0.9962551}
-  m_LocalPosition: {x: 0.620002, y: 0.1299999, z: 23.851398}
+  m_LocalPosition: {x: 0.620002, y: 0.1299999, z: 23.851763}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1427698128857425975}
@@ -24532,9 +24530,7 @@ MonoBehaviour:
   AmmoText: {fileID: 0}
   MuzzleFlash: {fileID: 31295446539893333, guid: d72e40def8d2f974a89a89ea4b871ee3,
     type: 3}
-  ImpactDust: {fileID: 2721845254008523264, guid: 22e2de48a86fa67499a6b4e0031e8d72,
-    type: 3}
-  BulletImpact: {fileID: 8477446236558398896, guid: 79927596c23303545a3d1d60459335bb,
+  TracerPrefab: {fileID: 6255141788256227024, guid: ed6be96273db107418bd94e7ef546a8f,
     type: 3}
   flashActive: 0
 --- !u!114 &4035022691098722334
@@ -25143,7 +25139,7 @@ GameObject:
   - component: {fileID: 1022852009586041030}
   m_Layer: 10
   m_Name: NewChar_Rig_Head
-  m_TagString: Untagged
+  m_TagString: Self
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -25155,8 +25151,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8405350754623014570}
-  m_LocalRotation: {x: 0.063852385, y: -0.00000022118904, z: 0.00000040605653, w: -0.9979594}
-  m_LocalPosition: {x: -1.7381233, y: -0.00063674455, z: -0.00066091097}
+  m_LocalRotation: {x: 0.063852385, y: -0.0000002258457, z: 0.00000023841854, w: -0.9979594}
+  m_LocalPosition: {x: -1.7381184, y: -0.0007080564, z: -0.00073468685}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 6868402266497876789}
@@ -25392,8 +25388,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8538052008447090607}
-  m_LocalRotation: {x: 0, y: 0, z: -0.034958377, w: 0.9993888}
-  m_LocalPosition: {x: -1.8093852, y: 0.0000000010163717, z: -4.3368087e-19}
+  m_LocalRotation: {x: 0, y: 0, z: 0.034958307, w: -0.9993888}
+  m_LocalPosition: {x: -1.8093886, y: -0.000014185853, z: -0.000014532823}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 8950896991263723511}
@@ -26119,7 +26115,7 @@ GameObject:
   - component: {fileID: 7812415041892370684}
   m_Layer: 10
   m_Name: NewChar_Rig_LeftForeArm
-  m_TagString: Untagged
+  m_TagString: Self
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -26131,8 +26127,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8755979167640686106}
-  m_LocalRotation: {x: -0.39426005, y: 0.57951945, z: 0.35686094, w: 0.61754876}
-  m_LocalPosition: {x: -3.2243772, y: 0.00024938583, z: -0.0006817579}
+  m_LocalRotation: {x: -0.39426008, y: 0.5795194, z: 0.3568609, w: 0.6175488}
+  m_LocalPosition: {x: -3.2244055, y: 0.00024473667, z: -0.00070106983}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 9069778027811190780}
@@ -27466,10 +27462,7 @@ MonoBehaviour:
   AmmoText: {fileID: 0}
   MuzzleFlash: {fileID: 31295446539893333, guid: d72e40def8d2f974a89a89ea4b871ee3,
     type: 3}
-  ImpactDust: {fileID: 2721845254008523264, guid: 22e2de48a86fa67499a6b4e0031e8d72,
-    type: 3}
-  BulletImpact: {fileID: 8477446236558398896, guid: 79927596c23303545a3d1d60459335bb,
-    type: 3}
+  TracerPrefab: {fileID: 0}
   flashActive: 0
 --- !u!114 &3076976411879872914
 MonoBehaviour:

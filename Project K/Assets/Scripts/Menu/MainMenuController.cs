@@ -7,6 +7,8 @@ using UnityEngine.UI;
 
 public class MainMenuController : MonoBehaviourPunCallbacks
 {
+    public MatchListController matchListCtrl;
+
     public GameObject[] Highlights;
     public bool Connected = false;
 
@@ -22,6 +24,15 @@ public class MainMenuController : MonoBehaviourPunCallbacks
     public GameObject playerListingPrefab;
     public Transform playerListingContainer;
 
+    void Awake()
+    {
+        MainMenuPanel.SetActive(true);
+        MatchListPanel.SetActive(true);
+        CustomMatchPanel.SetActive(false);
+        SettingsPanel.SetActive(false);
+        ProfilePanel.SetActive(false);
+    }
+
     public override void OnConnectedToMaster()
     {
         Connected = true;
@@ -35,10 +46,6 @@ public class MainMenuController : MonoBehaviourPunCallbacks
     {
         Debug.Log("Joined Lobby");
         Server.text = PhotonNetwork.CloudRegion + ":" + PhotonNetwork.CurrentCluster + ":" + PhotonNetwork.CurrentLobby;
-
-       /* string roomName = "RoomMcRoomFace";
-        RoomOptions roomOpt = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10 };
-        PhotonNetwork.JoinOrCreateRoom(roomName, roomOpt, new TypedLobby(null, LobbyType.Default));*/
     }
 
     public override void OnLobbyStatisticsUpdate(List<TypedLobbyInfo> lobbyStatistics)
@@ -59,21 +66,70 @@ public class MainMenuController : MonoBehaviourPunCallbacks
         ConnectionStatus.color = Color.white;
     }
 
-    void Start()
+    public void Matchmaking()
     {
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
+        string roomName = "Room1234";
+
+        RoomOptions roomOpt = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10 };
+        PhotonNetwork.JoinOrCreateRoom(roomName, roomOpt, new TypedLobby(null, LobbyType.Default));
     }
 
-    void Update()
+    public void LogOut()
     {
+        PhotonNetwork.Disconnect();
 
+        MainMenuPanel.SetActive(true);
+        MatchListPanel.SetActive(false);
+        CustomMatchPanel.SetActive(false);
+        SettingsPanel.SetActive(false);
+        ProfilePanel.SetActive(false);
+    }
+
+    public void Host()
+    {
+        CustomMatchPanel.SetActive(true);
+        MatchListPanel.SetActive(false);
+        ProfilePanel.SetActive(false);
+        SettingsPanel.SetActive(false);
+        MainMenuPanel.SetActive(false);
+    }
+
+    public void List()
+    {
+        MatchListPanel.SetActive(true);
+        ProfilePanel.SetActive(false);
+        SettingsPanel.SetActive(false);
+        MainMenuPanel.SetActive(false);
+        CustomMatchPanel.SetActive(false);
+    }
+
+    public void Profile()
+    {
+        ProfilePanel.SetActive(true);
+        SettingsPanel.SetActive(false);
+        MainMenuPanel.SetActive(false);
+        MatchListPanel.SetActive(false);
+        CustomMatchPanel.SetActive(false);
+    }
+
+    public void Settings()
+    {
+        SettingsPanel.SetActive(true);
+        MainMenuPanel.SetActive(false);
+        MatchListPanel.SetActive(false);
+        CustomMatchPanel.SetActive(false);
+        ProfilePanel.SetActive(false);
     }
 
     public void BackToMain()
     {
         MainMenuPanel.SetActive(true);
         MatchListPanel.SetActive(false);
+        CustomMatchPanel.SetActive(false);
+        SettingsPanel.SetActive(false);
+        ProfilePanel.SetActive(false);
+        
+        Debug.Log("1111Custom: " + matchListCtrl.matchList[0].CustomProperties.ToStringFull());
     }
 
 }

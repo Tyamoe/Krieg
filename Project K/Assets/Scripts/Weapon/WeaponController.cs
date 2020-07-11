@@ -90,8 +90,7 @@ public class WeaponController : MonoBehaviour
 
     [Header("Prefab References")]
     public GameObject MuzzleFlash;
-    public GameObject ImpactDust;
-    public GameObject BulletImpact;
+    public GameObject TracerPrefab;
 
     /***************************************/
     /**************** PRIVATE **************/
@@ -155,32 +154,6 @@ public class WeaponController : MonoBehaviour
     private bool noAmmoPlay = true;
 
     private bool Started = false;
-
-    [PunRPC]
-    private void ActivateMuzzleFlash()
-    {
-        GameObject f = Instantiate(MuzzleFlash, BulletSpawn.position, BulletSpawn.rotation);
-        Destroy(f, 0.5f);
-    }
-
-    [PunRPC]
-    private void ActivateImpactDust(Vector3 position, Quaternion rotation)
-    {
-        GameObject f = Instantiate(ImpactDust, position, rotation);
-        Destroy(f, 0.5f);
-    }
-
-    [PunRPC]
-    private void PlayFireSFX(Vector3 position)
-    {
-        AudioSource.PlayClipAtPoint(FireSFX, position);
-    }
-
-    [PunRPC]
-    private void DamageEnemy(PlayerController enemy)
-    {
-        enemy.ChangeHealth(Damage);
-    }
 
     void OnEnable()
     {
@@ -543,9 +516,12 @@ public class WeaponController : MonoBehaviour
 
                 Vector3 target = Vector3.zero;
 
+                Vector3 dir = Vector3.zero;
+
                 if (ads && adsDone)
                 {
-                    target = player.FPSCamera.transform.position + (Vector3.Normalize(player.FPSCamera.transform.forward + RecoilVector) * 10000.0f);
+                    dir = Vector3.Normalize(player.FPSCamera.transform.forward + RecoilVector);
+                    //target = player.FPSCamera.transform.position + (Vector3.Normalize(player.FPSCamera.transform.forward + RecoilVector) * 10000.0f);
                 }
                 else
                 {
@@ -556,8 +532,10 @@ public class WeaponController : MonoBehaviour
                     Vector3 RecoilV = recoilV.x * player.FPSCamera.transform.right;
                     RecoilV += recoilV.y * player.FPSCamera.transform.up;
 
-                    target = player.FPSCamera.transform.position + (Vector3.Normalize(player.FPSCamera.transform.forward + RecoilV) * 10000.0f);
+                    dir = Vector3.Normalize(player.FPSCamera.transform.forward + RecoilV);
+                    //target = player.FPSCamera.transform.position + (Vector3.Normalize(player.FPSCamera.transform.forward + RecoilV) * 10000.0f);
                 }
+                target = player.FPSCamera.transform.position + (dir * 10000.0f);
 
                 RaycastHit hit;
                 if (Physics.Linecast(player.FPSCamera.transform.position, target, out hit))
@@ -595,15 +573,29 @@ public class WeaponController : MonoBehaviour
                     }
                     else
                     {
+                        if (!flashActive)
+                        {
+                            // Tracer
+                            GameObject f = PhotonNetwork.Instantiate("Tracer", BulletSpawn.position, BulletSpawn.rotation);
+                            f.GetComponent<Tracer>().direction = dir;
+
+                            if (Game.Instance.Networked)
+                                f.GetPhotonView().RPC("Me", RpcTarget.MasterClient, dir);
+
+                            /*if (Game.Instance.Networked)
+                                GetComponent<PhotonView>().RPC("TracerRPC", RpcTarget.OthersBuffered);*/
+                        }
+
+
                         // Bullet World Impact
-                        GameObject g = Instantiate(ImpactDust, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
+                        /*GameObject g = Instantiate(ImpactDust, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
                         Destroy(g, 0.5f);
 
                         if (Game.Instance.Networked)
                             GetComponent<PhotonView>().RPC("ActivateImpactDust", RpcTarget.Others, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
 
                         g = Instantiate(BulletImpact, hit.point + hit.normal * 0.05f, Quaternion.FromToRotation(Vector3.up, hit.normal));
-                        Destroy(g, 8.5f);
+                        Destroy(g, 8.5f);*/
 
                         audioSource.PlayOneShot(FireSFX);
                     }
@@ -782,6 +774,32 @@ public class WeaponController : MonoBehaviour
         BulletSpawn = a.transform;
 
         //Debug.Log(BulletSpawn.name);
+    }
+
+    [PunRPC]
+    private void TracerRPC()
+    {
+        GameObject f = Instantiate(TracerPrefab, BulletSpawn.position, BulletSpawn.rotation);
+        f.GetComponent<Tracer>().direction = player.FPSCamera.transform.forward;
+    }
+
+    [PunRPC]
+    private void ActivateMuzzleFlash()
+    {
+        GameObject f = Instantiate(MuzzleFlash, BulletSpawn.position, BulletSpawn.rotation);
+        Destroy(f, 0.5f);
+    }
+
+    [PunRPC]
+    private void PlayFireSFX(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(FireSFX, position);
+    }
+
+    [PunRPC]
+    private void DamageEnemy(PlayerController enemy)
+    {
+        enemy.ChangeHealth(Damage);
     }
 
 }

@@ -25,8 +25,8 @@ public class GameController : MonoBehaviourPunCallbacks
 
     void CreatePlayer()
     {
-        GameObject obj = PhotonNetwork.Instantiate("Player", spawnPoints[Random.Range(0, spawnPoints.Length)].position, Quaternion.identity);
-        obj.GetComponent<PlayerController>().gameCtrl = this;
+        //GameObject obj = PhotonNetwork.Instantiate("Player", spawnPoints[Random.Range(0, spawnPoints.Length)].position, Quaternion.identity);
+        //obj.GetComponent<PlayerController>().gameCtrl = this;
 
         Debug.Log("Instantiating Player");
     }

@@ -138,7 +138,7 @@ public class PlayerController : MonoBehaviour
             if (FOV_ == value) return;
 
             FOV_ = value;
-            FPSCamera.fieldOfView = value;
+            //FPSCamera.fieldOfView = value;
             EnvCamera.fieldOfView = value;
         }
     }
@@ -220,7 +220,7 @@ public class PlayerController : MonoBehaviour
     private bool Started = false;
 
     //[HideInInspector]
-    public GameController gameCtrl;
+    public ModeController modeCtrl;
 
     void Awake()
     {
@@ -537,14 +537,14 @@ public class PlayerController : MonoBehaviour
         {
             Health = 100;
 
-            if(gameCtrl)
+            if(modeCtrl)
             {
-                int index = Random.Range(0, gameCtrl.spawnPoints.Length);
-                transform.position = gameCtrl.spawnPoints[index].position;
-                transform.rotation = Quaternion.identity;
+                Transform t = modeCtrl.GetRespawn();
+                transform.position = t.position;
+                transform.rotation = t.rotation;
 
                 if (Game.Instance.Networked)
-                    GetComponent<PhotonView>().RPC("Respawn", RpcTarget.Others, index);
+                    GetComponent<PhotonView>().RPC("Respawn", RpcTarget.OthersBuffered, t);
 
             }
             else
@@ -567,14 +567,14 @@ public class PlayerController : MonoBehaviour
         {
             Health = 100;
 
-            if (gameCtrl)
+            if (modeCtrl)
             {
-                int index = Random.Range(0, gameCtrl.spawnPoints.Length);
-                transform.position = gameCtrl.spawnPoints[index].position;
-                transform.rotation = Quaternion.identity;
+                Transform t = modeCtrl.GetRespawn();
+                transform.position = t.position;
+                transform.rotation = t.rotation;
 
                 if (Game.Instance.Networked)
-                    GetComponent<PhotonView>().RPC("Respawn", RpcTarget.AllBuffered, index);
+                    GetComponent<PhotonView>().RPC("Respawn", RpcTarget.OthersBuffered, t);
 
             }
             else
@@ -588,9 +588,11 @@ public class PlayerController : MonoBehaviour
     }
 
     [PunRPC]
-    private void Respawn(int index)
+    private void Respawn(Transform t)
     {
-        if (gameCtrl)
+        transform.position = t.position;
+        transform.rotation = t.rotation;
+        /*if (gameCtrl)
         {
             transform.position = gameCtrl.spawnPoints[index].position;
             transform.rotation = Quaternion.identity;
@@ -599,7 +601,7 @@ public class PlayerController : MonoBehaviour
         {
             transform.position = new Vector3(0.0f, 40.0f, 0.0f);
             transform.rotation = Quaternion.identity;
-        }
+        }*/
     }
 
     [PunRPC]

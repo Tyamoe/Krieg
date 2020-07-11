@@ -5,40 +5,38 @@ using Photon.Realtime;
 
 public class MatchmakingController : MonoBehaviourPunCallbacks
 {
-    public override void OnConnectedToMaster()
+    public int SceneIndex = 1;
+
+    public override void OnEnable()
     {
-        PhotonNetwork.AutomaticallySyncScene = true;
+        //Debug.Log("OnEnable");
+        PhotonNetwork.AddCallbackTarget(this);
     }
 
-    public void Matchmaking()
+    public override void OnDisable()
     {
-        //SearchButton.interactable = false;
+        //Debug.Log("OnDisable");
+        PhotonNetwork.RemoveCallbackTarget(this);
+    }
 
-        /*Debug.Log("Test1");
-        PhotonNetwork.JoinRandomRoom();
-        Debug.Log("Test2");*/
+    public override void OnJoinedRoom()
+    {
+        Debug.Log("OnJoinedRoom");
 
-        //RoomOptions roomOpt = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10 };
-        //PhotonNetwork.JoinOrCreateRoom("Room123", roomOpt, new TypedLobby(null, LobbyType.Default));
-
-        /*RoomOptions roomOpt = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10 };
-        PhotonNetwork.CreateRoom("Room123", roomOpt);
-
-        Debug.Log("Server: " + "Room123");*/
+        EnterGame();
     }
 
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
-        Debug.Log("Test3");
-        CreateRoom();
+        Debug.Log("OnJoinRoomFailed");
     }
 
-    void CreateRoom()
+    void EnterGame()
     {
-        Debug.Log("Test3.5");
-        RoomOptions roomOpt = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10 };
-        PhotonNetwork.CreateRoom("Room123", roomOpt);
-
-        Debug.Log("Server: " + "Room123");
+        if (PhotonNetwork.IsMasterClient)
+        {
+            PhotonNetwork.LoadLevel(SceneIndex);
+            Debug.Log("Creating Game");
+        }
     }
 }

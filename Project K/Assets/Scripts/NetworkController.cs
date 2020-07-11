@@ -20,6 +20,11 @@ public class NetworkController : MonoBehaviourPunCallbacks
 
     public Button CreateButton;
 
+    private void Awake()
+    {
+        PlayerPanel.SetActive(true);
+    }
+
     void Start()
     {
         string localPlayers = PlayerPrefs.GetString("localPlayers");
@@ -46,8 +51,6 @@ public class NetworkController : MonoBehaviourPunCallbacks
 
     public void CreateLocalPlayer()
     {
-        CreateButton.interactable = false;
-
         GameObject listing = Instantiate(LocalPlayerListing, LocalPlayerList, false);
         LocalPlayer l = listing.GetComponent<LocalPlayer>();
 
@@ -66,12 +69,14 @@ public class NetworkController : MonoBehaviourPunCallbacks
 
     IEnumerator InitializePlayer()
     {
-        yield return new WaitForSeconds(3.0f);
+        yield return new WaitForSeconds(1.5f);
         PhotonNetwork.ConnectUsingSettings();
     }
 
     public void ConnectToMasterServer()
     {
+        CreateButton.interactable = false;
+
         LoadingCircle.SetActive(true);
 
         StartCoroutine(InitializePlayer());
@@ -81,15 +86,19 @@ public class NetworkController : MonoBehaviourPunCallbacks
     {
         LoadingCircle.SetActive(false);
         CreateButton.interactable = true;
+
+        PlayerPanel.SetActive(true);
     }
 
     public override void OnConnectedToMaster()
     {
         LoadingCircle.SetActive(false);
-        PhotonNetwork.NickName = PlayerName;
-        PhotonNetwork.JoinLobby();
-
         PlayerPanel.SetActive(false);
+
+        PhotonNetwork.NickName = PlayerName;
+
+        PhotonNetwork.AutomaticallySyncScene = true;
+        PhotonNetwork.JoinLobby();
 
         Debug.Log("Connected on " + PhotonNetwork.CloudRegion + " :: " + PhotonNetwork.PhotonServerSettings.ToString());
     }

@@ -14,8 +14,8 @@ public class MatchListing : MonoBehaviourPunCallbacks
     public string mapName;
 
     public Text nameDisplay;
-    public Text mapNameDisplay;
     public Text countDisplay;
+    public Text mapNameDisplay;
 
     void Start()
     {
@@ -28,7 +28,7 @@ public class MatchListing : MonoBehaviourPunCallbacks
         
     }
 
-    public void UpdateListing(string uname, int count, int mcount)
+    public void UpdateListing(string uname, int count, int mcount, string details)
     {
         matchName = uname;
         playerCount = count;
@@ -36,6 +36,7 @@ public class MatchListing : MonoBehaviourPunCallbacks
 
         nameDisplay.text = matchName;
         countDisplay.text = playerCount + "/" + maxPlayerCount;
+        mapNameDisplay.text = details;
     }
 
     public void JoinMatch()

@@ -1,12 +1,15 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class PlayerListing : MonoBehaviour
 {
-    public Text playerName;
+    public TextMeshProUGUI Name;
+    public TextMeshProUGUI Details;
 
-    public void UpdateListing(string pName)
+    public void UpdateListing(string pName, string pDet)
     {
-        playerName.text = pName;
+        Name.text = pName;
+        Details.text = pDet;
     }
 }

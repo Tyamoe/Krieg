@@ -151,6 +151,7 @@ public class PlayerSettingsFunctions : MonoBehaviour
         v = PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
         PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
 
+        GameplayTab();
     }
 
     void LoadSaved()
@@ -284,13 +285,30 @@ public class PlayerSettingsFunctions : MonoBehaviour
         SaveSettingsButton.GetComponentInChildren<TextMeshProUGUI>().color = Color.black;
     }
 
+    IEnumerator DoSomething(GameObject OBJ)
+    {
+        yield return new WaitForSeconds(0.05f);
+
+        Vector3 v = OBJ.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+
+        if(Mathf.Abs(v.y) > 0.1f)
+        {
+            Debug.Log(OBJ.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position);
+            OBJ.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+        }
+    }
+
     #region GameplayTab
 
     public void GameplayTab()
     {
         GameplayTabPanel.SetActive(true);
-        Vector3 v = GameplayTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
-        GameplayTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+        /*Vector3 v = GameplayTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+
+        Debug.Log(GameplayTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position);
+        GameplayTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);*/
+
+        StartCoroutine(DoSomething(GameplayTabPanel));
 
         AudioTabPanel.SetActive(false);
         KeybindTabPanel.SetActive(false);
@@ -313,7 +331,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
     {
         if(settings.fov != inFloat.value || !Started)
         {
-            player.FOV = inFloat.value;
+            if (player)
+                player.FOV = inFloat.value;
             FovDisplay.text = inFloat.value.ToString("F0");
 
             settings.fov = inFloat.value;
@@ -330,7 +349,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
             BrightnessDisplay.text = inFloat.value.ToString("F2");
 
             RenderSettings.ambientLight = new Color(brightness / 100.0f, brightness / 100.0f, brightness / 100.0f, 1.0f);
-
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            //RenderSettings.
             settings.brightness = inFloat.value;
             SettingsChanged();
         }
@@ -340,7 +360,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
     {
         if (settings.SensitivityX != inFloat.value || !Started)
         {
-            player.SensitivityX = inFloat.value;
+            if (player)
+                player.SensitivityX = inFloat.value;
             SensXDisplay.text = inFloat.value.ToString("F2");
 
             settings.SensitivityX = inFloat.value;
@@ -352,7 +373,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
     {
         if (settings.SensitivityY != inFloat.value || !Started)
         {
-            player.SensitivityY = inFloat.value;
+            if (player)
+                player.SensitivityY = inFloat.value;
             SensYDisplay.text = inFloat.value.ToString("F2");
 
             settings.SensitivityY = inFloat.value;
@@ -364,7 +386,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
     {
         if (settings.ADSMultiplierX != inFloat.value || !Started)
         {
-            player.ADSMultiplierX = inFloat.value;
+            if (player)
+                player.ADSMultiplierX = inFloat.value;
             MultiXDisplay.text = inFloat.value.ToString("F2");
 
             settings.ADSMultiplierX = inFloat.value;
@@ -376,7 +399,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
     {
         if (settings.ADSMultiplierY != inFloat.value || !Started)
         {
-            player.ADSMultiplierY = inFloat.value;
+            if (player)
+                player.ADSMultiplierY = inFloat.value;
             MultiYDisplay.text = inFloat.value.ToString("F2");
 
             settings.ADSMultiplierY = inFloat.value;
@@ -386,7 +410,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
 
     public void UpdateADSTgl(Toggle inBool)
     {
-        player.toggleADS = inBool.isOn;
+        if (player)
+            player.toggleADS = inBool.isOn;
 
         settings.toggleADS = inBool.isOn;
         SettingsChanged();
@@ -394,7 +419,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
 
     public void UpdateCrouchTgl(Toggle inBool)
     {
-        player.toggleCrouch = inBool.isOn;
+        if(player)
+            player.toggleCrouch = inBool.isOn;
 
         settings.toggleCrouch = inBool.isOn;
         SettingsChanged();
@@ -407,8 +433,11 @@ public class PlayerSettingsFunctions : MonoBehaviour
     public void AudioTab()
     {
         AudioTabPanel.SetActive(true);
-        Vector3 v = AudioTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
-        AudioTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+
+        /*Vector3 v = AudioTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+        AudioTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);*/
+
+        StartCoroutine(DoSomething(AudioTabPanel));
 
         KeybindTabPanel.SetActive(false);
         PerformanceTabPanel.SetActive(false);
@@ -429,7 +458,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
 
     public void UpdateMasterVolume(Slider inFloat)
     {
-        player.MasterVolume = inFloat.value;
+        if (player)
+            player.MasterVolume = inFloat.value;
         MasterDisplay.text = inFloat.value.ToString("F3");
 
         settings.masterVolume = inFloat.value;
@@ -438,7 +468,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
 
     public void UpdateUIVolume(Slider inFloat)
     {
-        player.UIVolume = inFloat.value;
+        if (player)
+            player.UIVolume = inFloat.value;
         UIDisplay.text = inFloat.value.ToString("F3");
 
         settings.uiVolume = inFloat.value;
@@ -452,8 +483,11 @@ public class PlayerSettingsFunctions : MonoBehaviour
     public void KeybindTab()
     {
         KeybindTabPanel.SetActive(true);
-        Vector3 v = KeybindTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
-        KeybindTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+
+        /*Vector3 v = KeybindTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+        KeybindTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);*/
+
+        StartCoroutine(DoSomething(KeybindTabPanel));
 
         PerformanceTabPanel.SetActive(false);
         GameplayTabPanel.SetActive(false);
@@ -479,8 +513,11 @@ public class PlayerSettingsFunctions : MonoBehaviour
     public void PerformanceTab()
     {
         PerformanceTabPanel.SetActive(true);
-        Vector3 v = PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
-        PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
+
+        /*Vector3 v = PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
+        PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);*/
+
+        StartCoroutine(DoSomething(PerformanceTabPanel));
 
         GameplayTabPanel.SetActive(false);
         AudioTabPanel.SetActive(false);
@@ -516,7 +553,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
 
         //Screen.SetResolution(width, height, true);
 
-        renderCtrl.UpdateResolution(resolution);
+        if (renderCtrl)
+            renderCtrl.UpdateResolution(resolution);
         ResolutionDisplay.text = inFloat.value.ToString("F2");
 
         //Debug.Log(QualitySettings.resolutionScalingFixedDPIFactor);
@@ -547,7 +585,8 @@ public class PlayerSettingsFunctions : MonoBehaviour
     public void UpdateRenderDistance(Slider inFloat)
     {
         //player.FPSCamera.farClipPlane = inFloat.value;
-        player.EnvCamera.farClipPlane = inFloat.value;
+        if (player)
+            player.EnvCamera.farClipPlane = inFloat.value;
         RenderDisplay.text = inFloat.value.ToString("F2");
 
         settings.renderDistance = inFloat.value;

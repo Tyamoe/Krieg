@@ -9,10 +9,14 @@ TagManager:
   - Wall
   - Barrier
   - Prop
-  - InvisibleBarrier
   - Pivot
   - Container
   - Ladder
+  - SpawnMain
+  - SpawnOverflow
+  - Mode
+  - Map
+  - Self
   layers:
   - Default
   - TransparentFX

@@ -64,26 +64,117 @@ public class MatchListController : MonoBehaviourPunCallbacks
 
     public void UpdateMatchListings(List<RoomInfo> roomList)
     {
+        for (int i = 0; i < matchContainer.childCount; i++)
+        {
+            Destroy(matchContainer.GetChild(i).gameObject);
+        }
+
         foreach (RoomInfo room in roomList)
         {
-            Debug.Log("Match Name: " + room.Name);
+            Debug.Log("Match Name: " + room.Name + " Here: " + room.RemovedFromList);
+            Debug.Log("Room: " + room.ToStringFull());
 
-            if (matchListing != null && matchListing.ContainsKey(room.Name))
+            if(room.RemovedFromList && room.MaxPlayers == 0)
+            {
+                continue;
+            }
+            
+            /*if (matchListing != null && matchListing.ContainsKey(room.Name))
             {
                 GameObject listing = matchListing[room.Name];
                 MatchListing m = listing.GetComponent<MatchListing>();
 
-                m.UpdateListing(room.Name, room.PlayerCount, room.MaxPlayers);
+                string roomDetails = "";
+
+                if (room.CustomProperties.ContainsKey("Mode"))
+                {
+                    roomDetails = (string)room.CustomProperties["Mode"];
+                }
+                else
+                {
+                    roomDetails = "*";
+                }
+
+                roomDetails += " on ";
+
+                if (room.CustomProperties.ContainsKey("Map"))
+                {
+                    roomDetails += (string)room.CustomProperties["Map"];
+                }
+                else
+                {
+                    roomDetails += "*";
+                }
+
+                m.UpdateListing(room.Name, room.PlayerCount, room.MaxPlayers, roomDetails);
             }
-            else
+            else*/
             {
                 GameObject listing = Instantiate(matchListPrefab, matchContainer);
                 MatchListing m = listing.GetComponent<MatchListing>();
 
-                m.UpdateListing(room.Name, room.PlayerCount, room.MaxPlayers);
+                string roomDetails = "";
+
+                if (room.CustomProperties.ContainsKey("Mode"))
+                {
+                    roomDetails = (string)room.CustomProperties["Mode"];
+                }
+                else
+                {
+                    roomDetails = "*";
+                }
+
+                roomDetails += " on ";
+
+                if (room.CustomProperties.ContainsKey("Map"))
+                {
+                    roomDetails += (string)room.CustomProperties["Map"];
+                }
+                else
+                {
+                    roomDetails += "*";
+                }
+
+                m.UpdateListing(room.Name, room.PlayerCount, room.MaxPlayers, roomDetails);
 
                 matchListing.Add(room.Name, listing);
+                matchList.Add(room);
+
+                Debug.Log("Custom: " + room.CustomProperties.ToStringFull());
+
+                StartCoroutine(DoSomething(room, m));
             }
         }
+    }
+
+    IEnumerator DoSomething(RoomInfo room, MatchListing m)
+    {
+        yield return new WaitForSeconds(1.5f);
+
+        string roomDetails = "";
+
+        if (room.CustomProperties.ContainsKey("Mode"))
+        {
+            roomDetails = (string)room.CustomProperties["Mode"];
+        }
+        else
+        {
+            roomDetails = "*";
+        }
+
+        roomDetails += " on ";
+
+        if (room.CustomProperties.ContainsKey("Map"))
+        {
+            roomDetails += (string)room.CustomProperties["Map"];
+        }
+        else
+        {
+            roomDetails += "*";
+        }
+
+        m.UpdateListing(room.Name, room.PlayerCount, room.MaxPlayers, roomDetails);
+
+        Debug.Log("Custom: " + room.CustomProperties.ToStringFull());
     }
 }

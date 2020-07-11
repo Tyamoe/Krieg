@@ -44,6 +44,11 @@ MonoBehaviour:
   - DamageEnemy
   - ChangeHealthRPC
   - WeaponSwap
+  - Initialize
+  - PlayerDied
+  - ImpactRPC
+  - TracerRPC
+  - Me
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
