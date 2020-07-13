@@ -27,15 +27,15 @@ public class Tracer : MonoBehaviour
 
     void Update()
     {
-        if (photonView.IsMine || !Game.Instance.Networked)
+        if (photonView.IsMine || !PhotonNetwork.IsConnected)
         {
-            body.AddForce(direction * 1000.0f);
+            body.AddForce(direction * 2000.0f);
             //Debug.Log("AddForce: " + direction * 10.0f);
 
             timer -= Time.deltaTime;
             if (timer <= 0.0f)
             {
-                if (Game.Instance.Networked)
+                if (PhotonNetwork.IsConnected)
                     PhotonNetwork.Destroy(gameObject);
                 else
                     Destroy(gameObject);
@@ -51,7 +51,7 @@ public class Tracer : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(photonView.IsMine || !Game.Instance.Networked)
+        if(photonView.IsMine || !PhotonNetwork.IsConnected)
         {
             if (collision.transform.tag == "Self")
             {
@@ -61,7 +61,7 @@ public class Tracer : MonoBehaviour
 
             ContactPoint hit = collision.GetContact(0);
 
-            if (Game.Instance.Networked)
+            if (PhotonNetwork.IsConnected)
                 photonView.RPC("ImpactRPC", RpcTarget.AllBuffered, hit.point, hit.normal);
             else
             {
@@ -75,7 +75,7 @@ public class Tracer : MonoBehaviour
 
              g = Instantiate(BulletImpact, hit.point + hit.normal * 0.05f, Quaternion.FromToRotation(Vector3.up, hit.normal));
              Destroy(g, 8.5f);*/
-            if (Game.Instance.Networked)
+            if (PhotonNetwork.IsConnected)
                 PhotonNetwork.Destroy(gameObject);
             else
                 Destroy(gameObject);

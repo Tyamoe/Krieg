@@ -5,7 +5,33 @@ using UnityEngine.UI;
 using Photon.Pun;
 using TMPro;
 
-public class PlayerSettingsFunctions : MonoBehaviour
+public enum KeyActions
+{
+    Forward = 0,
+    Back = 1,
+    Left = 2,
+    Right = 3,
+
+    Sprint = 4,
+    Jump = 5,
+    Crouch = 6,
+
+    Reload = 7,
+    Use = 8,
+
+    Grenade = 9,
+
+    ADS = 10,
+    Fire = 11,
+
+    SwapDown = 12,
+    SwapUp = 13,
+
+    Menu = 14,
+    Scoreboard = 15,
+}
+
+public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
 {
     public PlayerController player;
 
@@ -54,6 +80,7 @@ public class PlayerSettingsFunctions : MonoBehaviour
 
     [Header("Keybinds Tab")]
     public TextMeshProUGUI JumpInput;
+    public GameObject[] KeyInputs;
 
     [Header("Performance Tab")]
     public Slider ResolutionSlider;
@@ -114,11 +141,53 @@ public class PlayerSettingsFunctions : MonoBehaviour
         public bool DOF;
     }
 
+    Dictionary<KeyCode, bool> bannedKeys = new Dictionary<KeyCode, bool>()
+    {
+        { KeyCode.LeftControl, true },
+        { KeyCode.RightControl, true },
+        { KeyCode.F11, true },
+        { KeyCode.F12, true },
+
+        { KeyCode.Alpha1, true },
+        { KeyCode.Alpha2, true },
+        { KeyCode.Alpha3, true },
+        { KeyCode.Alpha4, true },
+    };
+
+    Dictionary<KeyActions, KeyCode> Keybinds = new Dictionary<KeyActions, KeyCode>()
+    {
+        { KeyActions.Forward, KeyCode.W },
+        { KeyActions.Back, KeyCode.S },
+        { KeyActions.Left, KeyCode.A },
+        { KeyActions.Right, KeyCode.D },
+
+        { KeyActions.Sprint, KeyCode.LeftShift },
+        { KeyActions.Jump, KeyCode.Space },
+        { KeyActions.Crouch, KeyCode.C },
+
+        { KeyActions.Reload, KeyCode.R },
+        { KeyActions.Use, KeyCode.F },
+
+        { KeyActions.Grenade, KeyCode.G },
+
+        { KeyActions.ADS, KeyCode.Mouse1 },
+        { KeyActions.Fire, KeyCode.Mouse0 },
+
+        { KeyActions.SwapDown, KeyCode.Q },
+        { KeyActions.SwapUp, KeyCode.E },
+
+        { KeyActions.Menu, KeyCode.Escape },
+        { KeyActions.Scoreboard, KeyCode.Tab },
+    };
+
+    bool rebindActive = false;
+    KeyActions currRebind = KeyActions.Forward;
+
     Settings settings;
 
     bool Started = false;
 
-    private void Awake()
+    void Awake()
     {
         settings = new Settings();
     }
@@ -128,6 +197,76 @@ public class PlayerSettingsFunctions : MonoBehaviour
         LoadSaved();
         GameplayTab();
         Started = true;
+    }
+
+    void Update()
+    {
+        if(rebindActive)
+        {
+            if (Input.anyKeyDown)
+            {
+                KeyCode rawCode = KeyCode.A;
+                foreach (KeyCode kcode in System.Enum.GetValues(typeof(KeyCode)))
+                {
+                    if (Input.GetKeyDown(kcode))
+                    {
+                        rawCode = kcode;
+                        Debug.Log("KeyCode down: " + kcode);
+                        break;
+                    }
+                }
+
+                if (rawCode == Keybinds[currRebind])
+                {
+                    rebindActive = false;
+
+                    KeyInputs[(int)currRebind].GetComponent<Image>().fillCenter = true;
+                    KeyInputs[(int)currRebind].GetComponentInChildren<TextMeshProUGUI>().color = Color.black;
+
+                    gameObject.GetComponent<Image>().raycastTarget = true;
+                }
+                else if(bannedKeys.ContainsKey(rawCode))
+                {
+                    StartCoroutine(DoSomething(KeyInputs[(int)currRebind].GetComponentInChildren<TextMeshProUGUI>(), "Invalid"));
+                }
+                else if (Keybinds.ContainsValue(rawCode))
+                {
+                    StartCoroutine(DoSomething(KeyInputs[(int)currRebind].GetComponentInChildren<TextMeshProUGUI>(), "Used"));
+                }
+                else
+                {
+                    rebindActive = false;
+
+                    KeyInputs[(int)currRebind].GetComponent<Image>().fillCenter = true;
+                    KeyInputs[(int)currRebind].GetComponentInChildren<TextMeshProUGUI>().color = Color.black;
+                    KeyInputs[(int)currRebind].GetComponentInChildren<TextMeshProUGUI>().text = rawCode.ToString();
+
+                    Keybinds[currRebind] = rawCode;
+
+                    gameObject.GetComponent<Image>().raycastTarget = true;
+
+                    SettingsChanged();
+                }
+            }
+
+            if(Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2))
+            {
+                rebindActive = false;
+
+                KeyInputs[(int)currRebind].GetComponent<Image>().fillCenter = true;
+                KeyInputs[(int)currRebind].GetComponentInChildren<TextMeshProUGUI>().color = Color.black;
+
+                gameObject.GetComponent<Image>().raycastTarget = true;
+            }
+        }
+    }
+
+    IEnumerator DoSomething(TextMeshProUGUI tmp, string msg)
+    {
+        string prev = tmp.text;
+        tmp.text = msg;
+        yield return new WaitForSeconds(0.25f);
+        tmp.text = prev;
     }
 
     private void OnDisable()
@@ -179,6 +318,41 @@ public class PlayerSettingsFunctions : MonoBehaviour
 
         ADSToggle.isOn = settings.toggleADS;
         CrouchToggle.isOn = settings.toggleCrouch;
+
+        //-----------------------------------------------------------------//
+        //*****************************************************************//
+        //-----------------------------------------------------------------//
+
+        // Keybind
+        Keybinds[KeyActions.Forward] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Forward", (int)Keybinds[KeyActions.Forward]);
+        Keybinds[KeyActions.Back] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Back", (int)Keybinds[KeyActions.Back]);
+        Keybinds[KeyActions.Left] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Left", (int)Keybinds[KeyActions.Left]);
+        Keybinds[KeyActions.Right] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Right", (int)Keybinds[KeyActions.Right]);
+
+        Keybinds[KeyActions.Sprint] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Sprint", (int)Keybinds[KeyActions.Sprint]);
+        Keybinds[KeyActions.Jump] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Jump", (int)Keybinds[KeyActions.Jump]);
+        Keybinds[KeyActions.Crouch] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Crouch", (int)Keybinds[KeyActions.Crouch]);
+
+        Keybinds[KeyActions.Reload] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Reload", (int)Keybinds[KeyActions.Reload]);
+        Keybinds[KeyActions.Use] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Use", (int)Keybinds[KeyActions.Use]);
+
+        Keybinds[KeyActions.Grenade] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Grenade", (int)Keybinds[KeyActions.Grenade]);
+
+        Keybinds[KeyActions.ADS] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "ADS", (int)Keybinds[KeyActions.ADS]);
+        Keybinds[KeyActions.Fire] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Fire", (int)Keybinds[KeyActions.Fire]);
+
+        Keybinds[KeyActions.SwapDown] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "SwapDown", (int)Keybinds[KeyActions.SwapDown]);
+        Keybinds[KeyActions.SwapUp] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "SwapUp", (int)Keybinds[KeyActions.SwapUp]);
+
+        Keybinds[KeyActions.Menu] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Menu", (int)Keybinds[KeyActions.Menu]);
+        Keybinds[KeyActions.Scoreboard] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Scoreboard", (int)Keybinds[KeyActions.Scoreboard]);
+
+        for(int i = 0; i < System.Enum.GetValues(typeof(KeyActions)).Length; i++)
+        {
+            KeyInputs[i].GetComponentInChildren<TextMeshProUGUI>().text = Keybinds[(KeyActions)i].ToString();
+        }
+
+        player.UpdateKeybinds(Keybinds);
 
         //-----------------------------------------------------------------//
         //*****************************************************************//
@@ -254,6 +428,30 @@ public class PlayerSettingsFunctions : MonoBehaviour
         PlayerPrefs.SetInt("toggleADS", settings.toggleADS ? 1 : 0);
         PlayerPrefs.SetInt("toggleCrouch", settings.toggleCrouch ? 1 : 0);
 
+        // Keybind
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Forward", (int)Keybinds[KeyActions.Forward]);
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Back", (int)Keybinds[KeyActions.Back]);
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Left", (int)Keybinds[KeyActions.Left]);
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Right", (int)Keybinds[KeyActions.Right]);
+
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Sprint", (int)Keybinds[KeyActions.Sprint]);
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Jump", (int)Keybinds[KeyActions.Jump]);
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Crouch", (int)Keybinds[KeyActions.Crouch]);
+
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Reload", (int)Keybinds[KeyActions.Reload]);
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Use", (int)Keybinds[KeyActions.Use]);
+
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Grenade", (int)Keybinds[KeyActions.Grenade]);
+
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "ADS", (int)Keybinds[KeyActions.ADS]);
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Fire", (int)Keybinds[KeyActions.Fire]);
+
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "SwapDown", (int)Keybinds[KeyActions.SwapDown]);
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "SwapUp", (int)Keybinds[KeyActions.SwapUp]);
+
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Menu", (int)Keybinds[KeyActions.Menu]);
+        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Scoreboard", (int)Keybinds[KeyActions.Scoreboard]);
+
         // Audio
         PlayerPrefs.SetFloat("masterVolume", settings.masterVolume);
         PlayerPrefs.SetFloat("uiVolume", settings.uiVolume);
@@ -293,9 +491,28 @@ public class PlayerSettingsFunctions : MonoBehaviour
 
         if(Mathf.Abs(v.y) > 0.1f)
         {
-            Debug.Log(OBJ.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position);
+            //Debug.Log(OBJ.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position);
             OBJ.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
         }
+    }
+
+    public void LeaveRoom()
+    {
+        Debug.Log("LeaveRoom");
+        //PhotonNetwork.DestroyPlayerObjects()
+        PhotonNetwork.Destroy(player.gameObject);
+        Debug.Log("Destroy");
+        PhotonNetwork.LeaveRoom();
+        Debug.Log("Now");
+        PhotonNetwork.LoadLevel(0);
+        Debug.Log("ssss");
+    }
+
+    public override void OnLeftRoom()
+    {
+        Debug.Log("OnLeftRoom");
+        PhotonNetwork.LoadLevel(0);
+        Debug.Log("Leaving Game");
     }
 
     #region GameplayTab
@@ -504,6 +721,27 @@ public class PlayerSettingsFunctions : MonoBehaviour
 
         PerformanceTabButton.GetComponent<Image>().fillCenter = false;
         PerformanceTabButton.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
+    }
+
+    public void Rebind(int action)
+    {
+        if(rebindActive)
+        {
+            rebindActive = false;
+
+            KeyInputs[(int)currRebind].GetComponent<Image>().fillCenter = true;
+            KeyInputs[(int)currRebind].GetComponentInChildren<TextMeshProUGUI>().color = Color.black;
+
+            gameObject.GetComponent<Image>().raycastTarget = true;
+        }
+
+        rebindActive = true;
+        currRebind = (KeyActions)action;
+
+        KeyInputs[action].GetComponent<Image>().fillCenter = false;
+        KeyInputs[action].GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
+
+        gameObject.GetComponent<Image>().raycastTarget = false;
     }
 
     #endregion

@@ -96,6 +96,13 @@ public class WeaponController : MonoBehaviour
     /**************** PRIVATE **************/
     /***************************************/
 
+    [HideInInspector]
+    public KeyCode ReloadKey = KeyCode.R;
+    [HideInInspector]
+    public KeyCode ADSKey = KeyCode.Mouse1;
+    [HideInInspector]
+    public KeyCode FireKey = KeyCode.Mouse0;
+
     private bool playerControl = true;
     private bool Active = false;
 
@@ -240,7 +247,7 @@ public class WeaponController : MonoBehaviour
     {
         WeaponChange();
 
-        if (!photonView.IsMine && Game.Instance.Networked)
+        if (!photonView.IsMine && PhotonNetwork.IsConnected)
         {
             return;
         }
@@ -272,7 +279,7 @@ public class WeaponController : MonoBehaviour
     
     void Update()
     {
-        if (!photonView.IsMine && Game.Instance.Networked) return;
+        if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
 
         if(playerControl != player.PlayerControl)
         {
@@ -296,7 +303,7 @@ public class WeaponController : MonoBehaviour
         }
 
         // Reload Trigger
-        if((Input.GetKeyDown(KeyCode.R) && !reloading && MagSize < magSize && playerControl) || triggerReload)
+        if((Input.GetKeyDown(ReloadKey) && !reloading && MagSize < magSize && playerControl) || triggerReload)
         {
             if(reserveAmmo <= 0)
             {
@@ -368,7 +375,7 @@ public class WeaponController : MonoBehaviour
         }
 
         // ADS Trigger
-        if (Input.GetMouseButtonDown(1) && !reloading && playerControl || triggerADS)
+        if (Input.GetKeyDown(ADSKey) && !reloading && playerControl || triggerADS)
         {
             if(toggleADS)
             {
@@ -409,7 +416,7 @@ public class WeaponController : MonoBehaviour
         }
         
         // Update ADS Sight Line
-        if ((Input.GetMouseButton(1) && playerControl || ADSToggled) && !reloading)
+        if ((Input.GetKey(ADSKey) && playerControl || ADSToggled) && !reloading)
         {
             if (adsDone)
             {
@@ -443,7 +450,7 @@ public class WeaponController : MonoBehaviour
         }
 
         // UnADS Trigger
-        if (Input.GetMouseButtonUp(1) && playerControl || triggerUnADS)
+        if (Input.GetKeyUp(ADSKey) && playerControl || triggerUnADS)
         {
             if (!toggleADS || triggerUnADS)
             {
@@ -483,7 +490,7 @@ public class WeaponController : MonoBehaviour
         player.playerADS = ads;
 
         // Shooting Trigger
-        if (Input.GetMouseButton(0) && playerControl)
+        if (Input.GetKey(FireKey) && playerControl)
         {
             // Spray / Tap Detection
             if(!HeldDown)
@@ -556,9 +563,9 @@ public class WeaponController : MonoBehaviour
 
                         audioSource.PlayOneShot(FireHitSFX);
 
-                        /*if (Game.Instance.Networked)
+                        /*if (PhotonNetwork.IsConnected)
                             GetComponent<PhotonView>().RPC("DamageEnemy", RpcTarget.Others, enemy);*/
-                        if (Game.Instance.Networked)
+                        if (PhotonNetwork.IsConnected)
                             enemy.gameObject.GetPhotonView().RPC("ChangeHealthRPC", RpcTarget.AllBuffered, Damage);
 
                         /*int currHealth = enemy.ChangeHealth(Damage);
@@ -576,13 +583,22 @@ public class WeaponController : MonoBehaviour
                         if (!flashActive)
                         {
                             // Tracer
-                            GameObject f = PhotonNetwork.Instantiate("Tracer", BulletSpawn.position, BulletSpawn.rotation);
-                            f.GetComponent<Tracer>().direction = dir;
 
-                            if (Game.Instance.Networked)
+                            if (PhotonNetwork.IsConnected)
+                            {
+                                GameObject f = PhotonNetwork.Instantiate("Tracer", BulletSpawn.position, BulletSpawn.rotation);
+                                f.GetComponent<Tracer>().direction = dir;
                                 f.GetPhotonView().RPC("Me", RpcTarget.MasterClient, dir);
+                            }
+                            else
+                            {
+                                GameObject f = Instantiate(TracerPrefab, BulletSpawn.position, BulletSpawn.rotation);
+                                f.GetComponent<Tracer>().direction = dir;
+                            }
 
-                            /*if (Game.Instance.Networked)
+                            //if (PhotonNetwork.IsConnected)
+
+                            /*if (PhotonNetwork.IsConnected)
                                 GetComponent<PhotonView>().RPC("TracerRPC", RpcTarget.OthersBuffered);*/
                         }
 
@@ -591,7 +607,7 @@ public class WeaponController : MonoBehaviour
                         /*GameObject g = Instantiate(ImpactDust, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
                         Destroy(g, 0.5f);
 
-                        if (Game.Instance.Networked)
+                        if (PhotonNetwork.IsConnected)
                             GetComponent<PhotonView>().RPC("ActivateImpactDust", RpcTarget.Others, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
 
                         g = Instantiate(BulletImpact, hit.point + hit.normal * 0.05f, Quaternion.FromToRotation(Vector3.up, hit.normal));
@@ -605,8 +621,8 @@ public class WeaponController : MonoBehaviour
                     audioSource.PlayOneShot(FireSFX);
                 }
 
-                if (Game.Instance.Networked)
-                    GetComponent<PhotonView>().RPC("PlayFireSFX", RpcTarget.Others, transform.position);
+                if (PhotonNetwork.IsConnected)
+                    GetComponent<PhotonView>().RPC("PlayFireSFX", RpcTarget.OthersBuffered, transform.position);
 
                 float magx = RecoilMagnitudeX;
                 float magy = RecoilMagnitudeY;
@@ -652,7 +668,7 @@ public class WeaponController : MonoBehaviour
                     m.parentWeapon = this;
                     f.transform.parent = BulletSpawn;
 
-                    if (Game.Instance.Networked)
+                    if (PhotonNetwork.IsConnected)
                         GetComponent<PhotonView>().RPC("ActivateMuzzleFlash", RpcTarget.Others);
                 }
             }
@@ -720,7 +736,7 @@ public class WeaponController : MonoBehaviour
         }
 
         // Shooting Trigger Release
-        if(Input.GetMouseButtonUp(0) && playerControl)
+        if(Input.GetKeyUp(FireKey) && playerControl)
         {
             framesHeld = 0.0f;
             HeldDown = false;
@@ -793,7 +809,9 @@ public class WeaponController : MonoBehaviour
     [PunRPC]
     private void PlayFireSFX(Vector3 position)
     {
-        AudioSource.PlayClipAtPoint(FireSFX, position);
+        //Debug.Log("PlayFireSFX: " + PhotonNetwork.NickName);
+        //AudioSource.PlayClipAtPoint(FireSFX, position);
+        audioSource.PlayOneShot(FireSFX);
     }
 
     [PunRPC]

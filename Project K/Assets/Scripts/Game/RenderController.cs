@@ -1,9 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
 public class RenderController : MonoBehaviour
 {
+    public PlayerController player;
+
     [SerializeField]
     RenderTexture texture;
 
@@ -13,22 +16,33 @@ public class RenderController : MonoBehaviour
 
     bool Started = false;
 
+    private void Awake()
+    {
+        if (!player.photonView.IsMine && PhotonNetwork.IsConnected)
+        {
+            MainCamera.enabled = false;
+        }
+    }
+
     void Start()
     {
-        if(!Started)
+        if (player.photonView.IsMine || !PhotonNetwork.IsConnected)
         {
-            //texture = new RenderTexture(Screen.width, Screen.height, 24);
-            texture = new RenderTexture(1920, 1080, 24);
-            RenderTexture.active = texture;
-            if (texture.Create())
+            if (!Started)
             {
-                //Debug.Log("RenderTexture");
+                //texture = new RenderTexture(Screen.width, Screen.height, 24);
+                texture = new RenderTexture(1920, 1080, 24);
+                RenderTexture.active = texture;
+                if (texture.Create())
+                {
+                    //Debug.Log("RenderTexture");
+                }
+
+                FPSCamera.targetTexture = texture;
+                EnvCamera.targetTexture = texture;
+
+                Started = true;
             }
-
-            FPSCamera.targetTexture = texture;
-            EnvCamera.targetTexture = texture;
-
-            Started = true;
         }
     }
 
@@ -78,7 +92,8 @@ public class RenderController : MonoBehaviour
         //RenderTexture.active = null;
 
         //Graphics.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), texture);
-        Graphics.Blit(texture, null as RenderTexture);
+        if (player.photonView.IsMine || !PhotonNetwork.IsConnected)
+            Graphics.Blit(texture, null as RenderTexture);
 
         //Debug.Log("OnPostRender");
     }

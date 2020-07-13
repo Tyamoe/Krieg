@@ -18,8 +18,8 @@ public class GameController : MonoBehaviourPunCallbacks
 
     void Start()
     {
-        Debug.Log("Create PLayer? " + Game.Instance.Networked.ToString());
-        if (Game.Instance.Networked)
+        Debug.Log("Create PLayer? " + PhotonNetwork.IsConnected.ToString());
+        if (PhotonNetwork.IsConnected)
             CreatePlayer();
     }
 

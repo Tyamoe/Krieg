@@ -20,7 +20,7 @@ public class HandIK : MonoBehaviour
 
     void OnAnimatorIK()
     {
-        if (!photonView.IsMine && Game.Instance.Networked) return;
+        if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
         if (playerAnim)
         {
             if (ikActive)
@@ -64,7 +64,7 @@ public class HandIK : MonoBehaviour
     
     void Update()
     {
-        if (!photonView.IsMine && Game.Instance.Networked) return;
+        if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
 
         if (Input.GetKeyDown(KeyCode.L))
         {

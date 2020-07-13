@@ -11,6 +11,7 @@ public class MatchController : MonoBehaviourPunCallbacks
     public string[] Maps;
     public Sprite[] MapIcons;
     public string[] Modes;
+    public TextMeshProUGUI MatchStatus;
 
     [Header("Ref")]
     public GameObject Lobby;
@@ -80,12 +81,21 @@ public class MatchController : MonoBehaviourPunCallbacks
             }
 
             StartMatchText.text = startTime.ToString("F0");
+
+            photonView.RPC("UpdateStartTimeRPC", RpcTarget.OthersBuffered, startTime);
         }
+    }
+
+    [PunRPC]
+    void UpdateStartTimeRPC(float startTime_)
+    {
+        StartMatchText.text = startTime_.ToString("F0");
     }
 
     public void LeaveRoom()
     {
-        PhotonNetwork.LeaveRoom();
+        if(!starting)
+            PhotonNetwork.LeaveRoom();
     }
 
     public override void OnLeftRoom()
@@ -98,6 +108,7 @@ public class MatchController : MonoBehaviourPunCallbacks
 
     public void StartMatch()
     {
+        photonView.RPC("StartMatchRPC", RpcTarget.OthersBuffered);
         Lobby.SetActive(false);
 
         GameObject Map = PhotonNetwork.Instantiate("Maps/" + map, Vector3.zero, Quaternion.identity);
@@ -107,6 +118,12 @@ public class MatchController : MonoBehaviourPunCallbacks
         //modeCtrl.Initialize();
 
         Mode.GetPhotonView().RPC("Initialize", RpcTarget.AllBuffered);
+    }
+
+    [PunRPC]
+    void StartMatchRPC()
+    {
+        Lobby.SetActive(false);
     }
 
     public void RandomMatch()
@@ -144,6 +161,17 @@ public class MatchController : MonoBehaviourPunCallbacks
         MapIcon.sprite = MapIcons[mapIndex];
 
         MapNameText.text = map;
+
+        photonView.RPC("UpdateMapRPC", RpcTarget.OthersBuffered, mapIndex);
+    }
+
+    [PunRPC]
+    void UpdateMapRPC(int map_)
+    {
+        map = Maps[map_];
+        MapIcon.sprite = MapIcons[map_];
+
+        MapNameText.text = map;
     }
 
     public void RandomMode()
@@ -167,6 +195,16 @@ public class MatchController : MonoBehaviourPunCallbacks
         mode = Modes[modeIndex];
 
         ModeNameText.text = mode;
+
+        photonView.RPC("UpdateModeRPC", RpcTarget.OthersBuffered, modeIndex);
+    }
+
+    [PunRPC]
+    void UpdateModeRPC(int mode_)
+    {
+        mode = Modes[mode_];
+
+        ModeNameText.text = mode;
     }
 
     #endregion
@@ -185,10 +223,83 @@ public class MatchController : MonoBehaviourPunCallbacks
     public void VoteStart()
     {
         startVotes++;
-        if(startVotes >= voteThreshold)
+        photonView.RPC("UpdateVoteStart", RpcTarget.OthersBuffered);
+
+        UpdateVoteText();
+        Debug.Log("CustomMade: " + PhotonNetwork.CurrentRoom.CustomProperties.ToStringFull());
+    }
+
+    [PunRPC]
+    void UpdateVoteStart()
+    {
+        startVotes++;
+        UpdateVoteText();
+    }
+
+    public void VoteBotFill()
+    {
+        botFillVotes++;
+        photonView.RPC("UpdateBotFill", RpcTarget.OthersBuffered);
+
+        UpdateVoteText();
+    }
+
+    [PunRPC]
+    void UpdateBotFill()
+    {
+        botFillVotes++;
+        UpdateVoteText();
+    }
+
+    public void VoteChangeMap()
+    {
+        mapChangeVotes++;
+        photonView.RPC("UpdateChangeMap", RpcTarget.OthersBuffered);
+
+        UpdateVoteText();
+    }
+
+    [PunRPC]
+    void UpdateChangeMap()
+    {
+        mapChangeVotes++;
+        UpdateVoteText();
+    }
+
+    public void VoteChangeMode()
+    {
+        modeChangeVotes++;
+        photonView.RPC("UpdateChangeMode", RpcTarget.OthersBuffered);
+
+        UpdateVoteText();
+    }
+
+    [PunRPC]
+    void UpdateChangeMode()
+    {
+        modeChangeVotes++;
+        UpdateVoteText();
+    }
+
+    void UpdateVoteText()
+    {
+        voteStartMatchText.text = startVotes + "/" + voteThreshold;
+        voteBotFillText.text = botFillVotes + "/" + voteThreshold;
+        voteMapChangeText.text = mapChangeVotes + "/" + voteThreshold;
+        voteModeChangeText.text = modeChangeVotes + "/" + voteThreshold;
+        //Debug.Log("UpdateVoteText");
+
+        MatchStatus.text = "Searching For Players (" + PhotonNetwork.CurrentRoom.PlayerCount + "/" + PhotonNetwork.CurrentRoom.MaxPlayers + ")";
+
+        // Start
+        if (startVotes >= voteThreshold)
         {
-            startTime = 5.0f;
-            starting = true;
+            if (PhotonNetwork.IsMasterClient)
+            {
+                Debug.Log("IsMasterClient: " + PhotonNetwork.NickName);
+                startTime = 5.0f;
+                starting = true;
+            }
 
             startVotes = 0;
             botFillVotes = 0;
@@ -201,57 +312,114 @@ public class MatchController : MonoBehaviourPunCallbacks
             voteModeChangeButton.interactable = false;
         }
 
-        UpdateVoteText();
-        Debug.Log("CustomMade: " + PhotonNetwork.CurrentRoom.CustomProperties.ToStringFull());
-    }
-
-    public void VoteBotFill()
-    {
-        botFillVotes++;
+        // Bot
         if (botFillVotes >= voteThreshold)
         {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                fillBots = true;
+            }
+
             botFillVotes = 0;
-            fillBots = true;
 
             voteBotFillButton.interactable = false;
 
             BotFillText.text = "Bot Fill On";
         }
 
-        UpdateVoteText();
-    }
-
-    public void VoteChangeMap()
-    {
-        mapChangeVotes++;
+        // Map
         if (mapChangeVotes >= voteThreshold)
         {
+            if (PhotonNetwork.IsMasterClient)
+                RandomMap();
+
             mapChangeVotes = 0;
-            RandomMap();
         }
 
-        UpdateVoteText();
-    }
-
-    public void VoteChangeMode()
-    {
-        modeChangeVotes++;
+        // Mode
         if (modeChangeVotes >= voteThreshold)
         {
+            if (PhotonNetwork.IsMasterClient)
+                RandomMode();
+
             modeChangeVotes = 0;
-            RandomMode();
         }
 
-        UpdateVoteText();
+        //photonView.RPC("UpdateVoteRPC", RpcTarget.AllBuffered, voteThreshold, startVotes, botFillVotes, mapChangeVotes, modeChangeVotes);
     }
 
-    void UpdateVoteText()
+    [PunRPC]
+    void UpdateVoteRPC(int voteThreshold_, int startVotes_, int botFillVotes_, int mapChangeVotes_, int modeChangeVotes_)
     {
-        Debug.Log("UpdateVoteText");
-        voteStartMatchText.text = startVotes + "/" + voteThreshold;
-        voteBotFillText.text = botFillVotes + "/" + voteThreshold;
-        voteMapChangeText.text = mapChangeVotes + "/" + voteThreshold;
-        voteModeChangeText.text = modeChangeVotes + "/" + voteThreshold;
+        Debug.Log("UpdateVoteTextRPC");
+        Debug.Log(PhotonNetwork.NickName);
+        Debug.Log("Hekloks: " + voteThreshold_ + " " + startVotes_ + " " + botFillVotes_ + " " + mapChangeVotes_ + " " + modeChangeVotes_);
+
+        voteStartMatchText.text = startVotes_ + "/" + voteThreshold_;
+        voteBotFillText.text = botFillVotes_ + "/" + voteThreshold_;
+        voteMapChangeText.text = mapChangeVotes_ + "/" + voteThreshold_;
+        voteModeChangeText.text = modeChangeVotes_ + "/" + voteThreshold_;
+
+        startVotes = startVotes_;
+        botFillVotes = botFillVotes_;
+        mapChangeVotes = mapChangeVotes_;
+        modeChangeVotes = modeChangeVotes_;
+
+        voteThreshold = voteThreshold_;
+
+        // Start
+        if (startVotes >= voteThreshold)
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                Debug.Log("IsMasterClient: " + PhotonNetwork.NickName);
+                startTime = 5.0f;
+                starting = true;
+            }
+
+            startVotes = 0;
+            botFillVotes = 0;
+            mapChangeVotes = 0;
+            modeChangeVotes = 0;
+
+            voteStartMatchButton.interactable = false;
+            voteBotFillButton.interactable = false;
+            voteMapChangeButton.interactable = false;
+            voteModeChangeButton.interactable = false;
+        }
+
+        // Bot
+        if (botFillVotes >= voteThreshold)
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                fillBots = true;
+            }
+
+            botFillVotes = 0;
+
+            voteBotFillButton.interactable = false;
+
+            BotFillText.text = "Bot Fill On";
+        }
+
+        // Map
+        if (mapChangeVotes >= voteThreshold)
+        {
+            if (PhotonNetwork.IsMasterClient)
+                RandomMap();
+
+            mapChangeVotes = 0;
+        }
+
+        // Mode
+        if (modeChangeVotes >= voteThreshold)
+        {
+            if (PhotonNetwork.IsMasterClient)
+                RandomMode();
+
+            modeChangeVotes = 0;
+        }
     }
 
     #endregion
@@ -260,70 +428,87 @@ public class MatchController : MonoBehaviourPunCallbacks
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
+        Debug.Log("OnPlayerEnteredRoom");
         UpdatePlayerListing();
 
-        voteThreshold = PhotonNetwork.PlayerList.Length;
-
-        if(voteThreshold > 2)
+        if (PhotonNetwork.IsMasterClient)
         {
-            switch (voteThreshold)
-            {
-                case 3:
-                    voteThreshold = 2;
-                    break;
-                case 4:
-                    voteThreshold = 2;
-                    break;
-                case 5:
-                    voteThreshold = 3;
-                    break;
-                case 6:
-                    voteThreshold = 3;
-                    break;
-                case 7:
-                    voteThreshold = 4;
-                    break;
-                default:
-                    voteThreshold = Mathf.FloorToInt(voteThreshold / 2.0f);
-                    break;
-            }
-        }
+            voteThreshold = PhotonNetwork.PlayerList.Length;
 
+            if (voteThreshold > 2)
+            {
+                switch (voteThreshold)
+                {
+                    case 3:
+                        voteThreshold = 2;
+                        break;
+                    case 4:
+                        voteThreshold = 2;
+                        break;
+                    case 5:
+                        voteThreshold = 3;
+                        break;
+                    case 6:
+                        voteThreshold = 3;
+                        break;
+                    case 7:
+                        voteThreshold = 4;
+                        break;
+                    default:
+                        voteThreshold = Mathf.FloorToInt(voteThreshold / 2.0f);
+                        break;
+                }
+            }
+
+            photonView.RPC("UpdateThreshold", RpcTarget.OthersBuffered, voteThreshold);
+            UpdateVoteText();
+        }
+    }
+
+    [PunRPC]
+    void UpdateThreshold(int thresh)
+    {
+        voteThreshold = thresh;
         UpdateVoteText();
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
+        Debug.Log("OnPlayerLeftRoom");
         UpdatePlayerListing();
 
-        voteThreshold = PhotonNetwork.PlayerList.Length;
-
-        if (voteThreshold > 2)
+        if (PhotonNetwork.IsMasterClient)
         {
-            switch (voteThreshold)
-            {
-                case 3:
-                    voteThreshold = 2;
-                    break;
-                case 4:
-                    voteThreshold = 2;
-                    break;
-                case 5:
-                    voteThreshold = 3;
-                    break;
-                case 6:
-                    voteThreshold = 3;
-                    break;
-                case 7:
-                    voteThreshold = 4;
-                    break;
-                default:
-                    voteThreshold = Mathf.FloorToInt(voteThreshold / 2.0f);
-                    break;
-            }
-        }
+            voteThreshold = PhotonNetwork.PlayerList.Length;
 
-        UpdateVoteText();
+            if (voteThreshold > 2)
+            {
+                switch (voteThreshold)
+                {
+                    case 3:
+                        voteThreshold = 2;
+                        break;
+                    case 4:
+                        voteThreshold = 2;
+                        break;
+                    case 5:
+                        voteThreshold = 3;
+                        break;
+                    case 6:
+                        voteThreshold = 3;
+                        break;
+                    case 7:
+                        voteThreshold = 4;
+                        break;
+                    default:
+                        voteThreshold = Mathf.FloorToInt(voteThreshold / 2.0f);
+                        break;
+                }
+            }
+
+            photonView.RPC("UpdateThreshold", RpcTarget.OthersBuffered, voteThreshold);
+            UpdateVoteText();
+        }
     }
 
     private void UpdatePlayerListing()
@@ -337,6 +522,12 @@ public class MatchController : MonoBehaviourPunCallbacks
         {
             GameObject listing = Instantiate(MatchPlayerListing, MatchPlayerList, false);
             PlayerListing l = listing.GetComponent<PlayerListing>();
+
+            if(player.IsLocal)
+            {
+                Color c = listing.GetComponent<Image>().color;
+                listing.GetComponent<Image>().color = new Color(c.r, c.g, c.b, 0.65f);
+            }
 
             l.Name.text = "" + player.NickName.Split('#')[0];
             if (player.CustomProperties.ContainsKey("PlayerDetails"))

@@ -195,6 +195,8 @@ public class PlayerController : MonoBehaviour
     private Vector3 lastPos;
     private bool moving = true;
 
+    private int currWeapon = 0;
+
     // Stance
     [HideInInspector]
     public bool Crouching = false;
@@ -219,12 +221,38 @@ public class PlayerController : MonoBehaviour
 
     private bool Started = false;
 
+    Dictionary<KeyActions, KeyCode> Keybinds = new Dictionary<KeyActions, KeyCode>()
+    {
+        { KeyActions.Forward, KeyCode.W },
+        { KeyActions.Back, KeyCode.S },
+        { KeyActions.Left, KeyCode.A },
+        { KeyActions.Right, KeyCode.D },
+
+        { KeyActions.Sprint, KeyCode.LeftShift },
+        { KeyActions.Jump, KeyCode.Space },
+        { KeyActions.Crouch, KeyCode.C },
+
+        { KeyActions.Reload, KeyCode.R },
+        { KeyActions.Use, KeyCode.F },
+
+        { KeyActions.Grenade, KeyCode.G },
+
+        { KeyActions.ADS, KeyCode.Mouse1 },
+        { KeyActions.Fire, KeyCode.Mouse0 },
+
+        { KeyActions.SwapDown, KeyCode.Q },
+        { KeyActions.SwapUp, KeyCode.E },
+
+        { KeyActions.Menu, KeyCode.Escape },
+        { KeyActions.Scoreboard, KeyCode.Tab },
+    };
+
     //[HideInInspector]
     public ModeController modeCtrl;
 
     void Awake()
     {
-        if (!photonView.IsMine && Game.Instance.Networked)
+        if (!photonView.IsMine && PhotonNetwork.IsConnected)
         {
             FPSCamera.enabled = false;
             EnvCamera.enabled = false;
@@ -265,7 +293,7 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        if(!photonView.IsMine && Game.Instance.Networked)
+        if(!photonView.IsMine && PhotonNetwork.IsConnected)
         {
             return;
         }
@@ -298,7 +326,7 @@ public class PlayerController : MonoBehaviour
         handIK.leftHandObj = weapons.weapons[0].Grip;
         handIK.rightHandObj = weapons.weapons[0].Trigger;
 
-        if (Game.Instance.Networked)
+        if (PhotonNetwork.IsConnected)
             GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, 0);
 
         Started = true;
@@ -306,9 +334,9 @@ public class PlayerController : MonoBehaviour
     
     void Update()
     {
-        if (!photonView.IsMine && Game.Instance.Networked) return;
+        if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
 
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(Keybinds[KeyActions.Menu]))
         {
             SettingsOpen = !SettingsOpen;
             SettingsUI.SetActive(SettingsOpen);
@@ -327,13 +355,17 @@ public class PlayerController : MonoBehaviour
             PlayerControl = !SettingsOpen;
         }
 
-        if (!PlayerControl)
-        {
-            return;
-        }
-
         // Gravity
         PlayerVelocity += PlayerGravity * Time.deltaTime;
+
+        if (!PlayerControl)
+        {
+            playerAnim.SetBool("Moving", false);
+
+            Vector3 move1 = PlayerVelocity;
+            player.Move(move1 * PlayerSpeed * Time.deltaTime);
+            return;
+        }
         
         // Landing
         if (player.isGrounded && PlayerVelocity.y < 0.0f || Climbing)
@@ -343,14 +375,14 @@ public class PlayerController : MonoBehaviour
         }
 
         // Jumping
-        if (Input.GetButtonDown("Jump") && player.isGrounded /*|| IsGrounded()*/ && !Climbing)
+        if (Input.GetKeyDown(Keybinds[KeyActions.Jump]) && player.isGrounded && !Climbing)
         {
             PlayerVelocity += transform.up * PlayerJumpHeight;
             Jumping = true;
         }
 
         // Sprint & Speed Mods
-        InputSprint = Input.GetKey(KeyCode.LeftShift);
+        InputSprint = Input.GetKey(Keybinds[KeyActions.Sprint]);
 
         float multi = 1.0f;
 
@@ -365,11 +397,38 @@ public class PlayerController : MonoBehaviour
         }
 
         // WASD
-        InputX = Input.GetAxis("Horizontal") * multi;
-        InputZ = Input.GetAxis("Vertical") * multi;
+        //InputX = Input.GetAxis("Horizontal") * multi;
+        //InputZ = Input.GetAxis("Vertical") * multi;
+
+        //Debug.Log("InputX" + InputX);
+        //Debug.Log("InputZ" + InputZ);
+        if (Input.GetKey(Keybinds[KeyActions.Left]))
+        {
+            InputX = -1.0f * multi;
+        }
+        else if (Input.GetKey(Keybinds[KeyActions.Right]))
+        {
+            InputX = 1.0f * multi;
+        }
+        else
+        {
+            InputX = 0.0f;
+        }
+        if (Input.GetKey(Keybinds[KeyActions.Forward]))
+        {
+            InputZ = 1.0f * multi;
+        }
+        else if (Input.GetKey(Keybinds[KeyActions.Back]))
+        {
+            InputZ = -1.0f * multi;
+        }
+        else
+        {
+            InputZ = 0.0f;
+        }
 
         // Moving
-        if(Mathf.Abs(InputX) > 0.0f || Mathf.Abs(InputZ) > 0.0f)
+        if (Mathf.Abs(InputX) > 0.0f || Mathf.Abs(InputZ) > 0.0f)
         {
             moving = true;
         }
@@ -401,7 +460,7 @@ public class PlayerController : MonoBehaviour
         player.Move(move * PlayerSpeed * Time.deltaTime);
 
         // Crouch
-        if (Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(Keybinds[KeyActions.Crouch]))
         {
             if (toggleCrouch)
             {
@@ -415,7 +474,7 @@ public class PlayerController : MonoBehaviour
             Crouch(Crouching);
         }
 
-        if (Input.GetKeyUp(KeyCode.C))
+        if (Input.GetKeyUp(Keybinds[KeyActions.Crouch]))
         {
             if (!toggleCrouch)
             {
@@ -436,7 +495,9 @@ public class PlayerController : MonoBehaviour
             handIK.leftHandObj = weapons.weapons[0].Grip;
             handIK.rightHandObj = weapons.weapons[0].Trigger;
 
-            if (Game.Instance.Networked)
+            currWeapon = 0;
+
+            if (PhotonNetwork.IsConnected)
                 GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, 0);
 
         }
@@ -450,12 +511,51 @@ public class PlayerController : MonoBehaviour
             handIK.leftHandObj = weapons.weapons[1].Grip;
             handIK.rightHandObj = weapons.weapons[1].Trigger;
 
-            if (Game.Instance.Networked)
+            currWeapon = 1;
+
+            if (PhotonNetwork.IsConnected)
                 GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, 1);
         }
 
+        if (Input.GetKeyDown(Keybinds[KeyActions.SwapDown]))
+        {
+            int prev = currWeapon;
+            currWeapon--;
+
+            currWeapon = currWeapon < 0 ? weapons.weapons.Count - 1 : currWeapon;
+
+            weapons.weapons[prev].WeaponSwap(false);
+            weapons.weapons[prev].gameObject.SetActive(false);
+            weapons.weapons[currWeapon].WeaponSwap(true);
+            weapons.weapons[currWeapon].gameObject.SetActive(true);
+
+            handIK.leftHandObj = weapons.weapons[currWeapon].Grip;
+            handIK.rightHandObj = weapons.weapons[currWeapon].Trigger;
+
+            if (PhotonNetwork.IsConnected)
+                GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, currWeapon);
+        }
+        else if (Input.GetKeyDown(Keybinds[KeyActions.SwapUp]))
+        {
+            int prev = currWeapon;
+            currWeapon++;
+
+            currWeapon = currWeapon >= weapons.weapons.Count ? 0 : currWeapon;
+
+            weapons.weapons[prev].WeaponSwap(false);
+            weapons.weapons[prev].gameObject.SetActive(false);
+            weapons.weapons[currWeapon].WeaponSwap(true);
+            weapons.weapons[currWeapon].gameObject.SetActive(true);
+
+            handIK.leftHandObj = weapons.weapons[currWeapon].Grip;
+            handIK.rightHandObj = weapons.weapons[currWeapon].Trigger;
+
+            if (PhotonNetwork.IsConnected)
+                GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, currWeapon);
+        }
+
         // Camera Angles TODO
-        if (Input.GetKeyDown(KeyCode.F4))
+        /*if (Input.GetKeyDown(KeyCode.F4))
         {
             cam.SetCamAngle(0);
         }
@@ -470,20 +570,16 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F7))
         {
             cam.SetCamAngle(3);
-        }
+        }*/
 
         lastPos = transform.position;
 
-        DebugText.text = "Send Rate: " + PhotonNetwork.SendRate + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
-
+        if(tempFrame % 10 == 0)
+            DebugText.text = "Send Rate: " + PhotonNetwork.SendRate + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
+        tempFrame++;
     }
 
-    void LateUpdate()
-    {
-        //transform.forward = PlayerForward;
-        //transform.right = PlayerRight;
-        //transform.up = PlayerUp;
-    }
+    int tempFrame = 0;
 
     bool IsGrounded()
     {
@@ -543,7 +639,7 @@ public class PlayerController : MonoBehaviour
                 transform.position = t.position;
                 transform.rotation = t.rotation;
 
-                if (Game.Instance.Networked)
+                if (PhotonNetwork.IsConnected)
                     GetComponent<PhotonView>().RPC("Respawn", RpcTarget.OthersBuffered, t);
 
             }
@@ -573,7 +669,7 @@ public class PlayerController : MonoBehaviour
                 transform.position = t.position;
                 transform.rotation = t.rotation;
 
-                if (Game.Instance.Networked)
+                if (PhotonNetwork.IsConnected)
                     GetComponent<PhotonView>().RPC("Respawn", RpcTarget.OthersBuffered, t);
 
             }
@@ -612,5 +708,17 @@ public class PlayerController : MonoBehaviour
             weapon.gameObject.SetActive(false);
         }
         weapons.weapons[currWeapon].gameObject.SetActive(true);
+    }
+
+    public void UpdateKeybinds(Dictionary<KeyActions, KeyCode> keybinds)
+    {
+        Keybinds = keybinds;
+
+        foreach(WeaponController weapon in weapons.weapons)
+        {
+            weapon.ReloadKey = keybinds[KeyActions.Reload];
+            weapon.ADSKey = keybinds[KeyActions.ADS];
+            weapon.FireKey = keybinds[KeyActions.Fire];
+        }
     }
 }

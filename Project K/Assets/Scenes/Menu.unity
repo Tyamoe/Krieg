@@ -1662,7 +1662,7 @@ MonoBehaviour:
   m_Elasticity: 0.1
   m_Inertia: 1
   m_DecelerationRate: 0.135
-  m_ScrollSensitivity: 1
+  m_ScrollSensitivity: 20
   m_Viewport: {fileID: 378379878}
   m_HorizontalScrollbar: {fileID: 0}
   m_VerticalScrollbar: {fileID: 1663935865}
@@ -12586,6 +12586,7 @@ MonoBehaviour:
   MasterDisplay: {fileID: 1633401338}
   UIDisplay: {fileID: 51457191}
   JumpInput: {fileID: 1544168601}
+  KeyInputs: []
   ResolutionSlider: {fileID: 1988355776}
   VSyncToggle: {fileID: 264902970}
   RenderSlider: {fileID: 154359903}
@@ -17470,7 +17471,7 @@ MonoBehaviour:
   m_Elasticity: 0.1
   m_Inertia: 1
   m_DecelerationRate: 0.135
-  m_ScrollSensitivity: 1
+  m_ScrollSensitivity: 20
   m_Viewport: {fileID: 830231691}
   m_HorizontalScrollbar: {fileID: 0}
   m_VerticalScrollbar: {fileID: 1593031843}
@@ -30165,7 +30166,7 @@ MonoBehaviour:
   m_Elasticity: 0.1
   m_Inertia: 1
   m_DecelerationRate: 0.135
-  m_ScrollSensitivity: 1
+  m_ScrollSensitivity: 20
   m_Viewport: {fileID: 1200047180}
   m_HorizontalScrollbar: {fileID: 0}
   m_VerticalScrollbar: {fileID: 1215479662}

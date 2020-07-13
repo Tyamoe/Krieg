@@ -22,6 +22,7 @@ public class MatchmakingController : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         Debug.Log("OnJoinedRoom");
+        Debug.Log(PhotonNetwork.NickName);
 
         EnterGame();
     }

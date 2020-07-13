@@ -129,7 +129,8 @@ public class MainMenuController : MonoBehaviourPunCallbacks
         SettingsPanel.SetActive(false);
         ProfilePanel.SetActive(false);
         
-        Debug.Log("1111Custom: " + matchListCtrl.matchList[0].CustomProperties.ToStringFull());
+        if(matchListCtrl.matchList.Count > 0)
+            Debug.Log("1111Custom: " + matchListCtrl.matchList[0].CustomProperties.ToStringFull());
     }
 
 }

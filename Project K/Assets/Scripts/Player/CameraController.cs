@@ -47,7 +47,7 @@ public class CameraController : MonoBehaviour
     private int currAngle = 0;
 
     // Custom Settings
-    private float SensitivityX_;
+    private float SensitivityX_ = 100.0f;
     public float SensitivityX
     {
         get { return SensitivityX_; }
@@ -60,7 +60,7 @@ public class CameraController : MonoBehaviour
         }
     }
 
-    private float SensitivityY_;
+    private float SensitivityY_ = 100.0f;
     public float SensitivityY
     {
         get { return SensitivityY_; }
@@ -72,28 +72,20 @@ public class CameraController : MonoBehaviour
         }
     }
 
-    public float ADSMultiplierX
-    {
-        get;
-        set;
-    }
+    public float ADSMultiplierX = 1.0f;
 
-    public float ADSMultiplierY
-    {
-        get;
-        set;
-    }
+    public float ADSMultiplierY = 1.0f;
 
     void Awake()
     {
-        if (!photonView.IsMine && Game.Instance.Networked) return;
+        if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
 
         defPos = transform.localPosition;
     }
     
     void Start()
     {
-        if (!photonView.IsMine && Game.Instance.Networked) return;
+        if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
 
         RotatonX = transform.eulerAngles.x;
         RotatonY = PlayerPivot.eulerAngles.y;
@@ -103,7 +95,7 @@ public class CameraController : MonoBehaviour
     
     void Update()
     {
-        if (!photonView.IsMine && Game.Instance.Networked) return;
+        if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
 
         if (!player.PlayerControl) return;
 

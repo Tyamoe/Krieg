@@ -49,6 +49,18 @@ MonoBehaviour:
   - ImpactRPC
   - TracerRPC
   - Me
+  - UpdateVoteRPC
+  - UpdateStartTimeTPC
+  - UpdateMapRPC
+  - UpdateStartTimeRPC
+  - UpdateModeRPC
+  - StartMatchRPC
+  - UpdateVoteStart
+  - UpdateBotFill
+  - UpdateChangeMap
+  - UpdateChangeMode
+  - UpdateThreshold
+  - ChatRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

@@ -62,6 +62,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\ChatController.cs" />
+    <Compile Include="Assets\ChatMessage.cs" />
     <Compile Include="Assets\LoadingCircle.cs" />
     <Compile Include="Assets\LocalPlayer.cs" />
     <Compile Include="Assets\MapController.cs" />

@@ -5,9 +5,9 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{07A21C90-D344-AE1A-8456-9910C203B41A}</ProjectGuid>
+    <ProjectGuid>{49FCAFB7-7D0A-B3F6-2171-B4248A94EC21}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AssemblyName>Unity.TextMeshPro</AssemblyName>
+    <AssemblyName>Unity.Postprocessing.Runtime</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{E097FAD1-6243-4DAD-9C02-E9B9EFC3FFC1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
@@ -607,62 +607,62 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\AssemblyInfo.cs.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\FastAction.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\MaterialReferenceManager.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_Asset.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_Character.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_CharacterInfo.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_ColorGradient.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_CoroutineTween.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_DefaultControls.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_Dropdown.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_EditorResourceManager.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_FontAsset.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_FontAssetCommon.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_FontAssetUtilities.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_FontFeatureTable.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_FontFeaturesCommon.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_InputField.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_InputValidator.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_LineInfo.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_ListPool.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_MaterialManager.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_MeshInfo.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_ObjectPool.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_PackageResourceImporter.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_RichTextTagStack.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_RichTextTagsCommon.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_ScrollbarEventHandler.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_SelectionCaret.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_Settings.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_ShaderUtilities.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_Sprite.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_SpriteAnimator.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_SpriteAsset.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_SpriteAssetImportFormats.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_SpriteCharacter.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_SpriteGlyph.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_Style.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_StyleSheet.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_SubMesh.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_SubMeshUI.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_Text.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_TextElement.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_TextElement_Legacy.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_TextInfo.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_TextParsingUtilities.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_TextUtilities.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_UpdateManager.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMP_UpdateRegistery.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMPro_EventManager.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMPro_ExtensionMethods.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMPro_MeshUtilities.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMPro_Private.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TMPro_UGUI_Private.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TextContainer.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TextMeshPro.cs" />
-    <Compile Include="Packages\com.unity.textmeshpro\Scripts\Runtime\TextMeshProUGUI.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Attributes\DisplayNameAttribute.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Attributes\MaxAttribute.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Attributes\MinAttribute.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Attributes\MinMaxAttribute.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Attributes\PostProcessAttribute.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Attributes\TrackballAttribute.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\AmbientOcclusion.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\AutoExposure.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\Bloom.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\ChromaticAberration.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\ColorGrading.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\DepthOfField.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\Dithering.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\FastApproximateAntialiasing.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\Fog.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\Grain.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\LensDistortion.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\MotionBlur.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\MultiScaleVO.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\ScalableAO.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\ScreenSpaceReflections.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\SubpixelMorphologicalAntialiasing.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\TemporalAntialiasing.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Effects\Vignette.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Monitors\HistogramMonitor.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Monitors\LightMeterMonitor.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Monitors\Monitor.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Monitors\VectorscopeMonitor.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Monitors\WaveformMonitor.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\ParameterOverride.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessBundle.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessDebug.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessDebugLayer.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessEffectRenderer.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessEffectSettings.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessEvent.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessLayer.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessManager.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessProfile.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessRenderContext.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessResources.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\PostProcessVolume.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\ColorUtilities.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\HableCurve.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\HaltonSeq.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\LogHistogram.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\MeshUtilities.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\PropertySheet.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\PropertySheetFactory.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\RuntimeUtilities.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\ShaderIDs.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\Spline.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\TargetPool.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\TextureFormatUtilities.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\TextureLerper.cs" />
+    <Compile Include="Packages\com.unity.postprocessing\PostProcessing\Runtime\Utils\XRSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Photon\PhotonChat\Code\PhotonChat.asmdef" />
