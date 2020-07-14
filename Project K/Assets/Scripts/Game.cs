@@ -24,8 +24,8 @@ public class Game : MonoBehaviour
         _instance = this;
         DontDestroyOnLoad(this.gameObject);
 
-        PhotonNetwork.SendRate = 32;
-        PhotonNetwork.SerializationRate = 32;
+        PhotonNetwork.SendRate = 64;
+        PhotonNetwork.SerializationRate = 64;
     }
 
     void Start()

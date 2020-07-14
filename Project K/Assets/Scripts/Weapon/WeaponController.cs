@@ -3,32 +3,35 @@ using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
 
+public enum WeaponClass
+{
+    Knife = 0,
+    Pistol = 1,
+    SMG = 2,
+    Shotgun = 3,
+    Rifle = 4,
+    Sniper = 5,
+}
+
 public class WeaponController : MonoBehaviour
 {
     public PhotonView photonView;
 
-    [Header("References/Pivots")]
-    public Transform WeaponPivot;
-    public Transform WeaponPivotHidden;
+    [Space]
+    public WeaponClass weaponClass;
 
-    public Transform CameraPivot;
-    public Transform SightPivot;
-
-    public Transform LeftHand;
-    public Transform GunMagazine;
-
-    public Transform Grip;
-    public Transform Trigger;
-
-    public float ForwardOffset = 7.5f;
-    [SerializeField]
-    private float forwardOffset = 0.0f;
-
-    [Header("Variables/Shooting")]
+    [Space]
+    [Header("Firing")]
+    public bool semiAuto = false;
+    [Tooltip("Auto: ~500 -> ~1100 | Semi: ~200 -> ~400 | Bolt: ~30 -> 120")]
     public float RPM = 900.0f;
     public int Damage = 25;
 
-    [Header("Variables/Recoil")]
+    [Space]
+    [Tooltip("Time between shots")]
+    public float ShotDelay = 0.0f;
+
+    [Header("Recoil")]
     // How Far
     [Range(0.0f, 1.0f)]
     public float RecoilMagnitudeX = 0.5f;
@@ -48,45 +51,54 @@ public class WeaponController : MonoBehaviour
     public float RecoilVelocityY = 1.0f;
 
     public float RecoilReset = 1.0f;
-
     public float RecoilLerp = 1.1f;
 
-    [Header("Variables/ADS")]
+    [Header("ADS")]
+    public float ADSSpeed = 0.2f;
     public bool toggleADS = false;
-    [Range(0.0f, 5.0f)]
+    /*[Range(0.0f, 5.0f)]
     public float ADSForwardLean = 1.4f;
     [Range(0.0f, 5.0f)]
-    public float ADSDownwardLean = 0.3f;
-    public float ADSSpeed = 0.2f;
+    public float ADSDownwardLean = 0.3f;*/
 
-    [Header("Variables/Hipfire")]
+    // Guns Tilt when not ads
+    public float ForwardOffset = 7.5f;
+
+    [Header("Hipfire")]
     [Range(0.0f, 1.0f)]
     public float HipfireSpreadX = 0.5f;
     [Range(0.0f, 1.0f)]
     public float HipfireSpreadY = 0.5f;
 
-    [Header("Variables/Reload")]
+    [Header("Reload")]
+    public float ReloadSpeed = 2.1f;
     public int MagSize = 30;
     public int ClipCount = 3;
-    public float ReloadSpeed = 2.1f;
 
-    [Header("References")]
-    public CameraController cameraCtrl;
+    [Header("Controller References")]
     public PlayerController player;
+    public CameraController cameraCtrl;
     public Animator playerAnim;
+
+    [Header("Transform References")]
+    public Transform WeaponPivot;
+    public Transform WeaponPivotHidden;
+    public Transform CameraPivot;
+
+    [Space]
+    public Transform LeftHand;
+
+    [Space]
+    public Transform GunMagazine;
+    public Transform SightPivot;
+    public Transform Grip;
+    public Transform Trigger;
 
     [Header("References/Audio")]
     public AudioSource audioSource;
     public AudioClip FireSFX;
     public AudioClip FireHitSFX;
     public AudioClip NoAmmoSFX;
-
-    // Private References
-    private RawImage Hitmarker;
-    private GameObject Crosshair;
-
-    [SerializeField]
-    private TMPro.TextMeshProUGUI AmmoText;
 
     [Header("Prefab References")]
     public GameObject MuzzleFlash;
@@ -96,15 +108,24 @@ public class WeaponController : MonoBehaviour
     /**************** PRIVATE **************/
     /***************************************/
 
+    private bool playerControl = true;
+    private bool Active = false;
+
+    private bool Started = false;
+
+    // Private References
+    private RawImage Hitmarker;
+    private GameObject Crosshair;
+
+    private TMPro.TextMeshProUGUI AmmoText;
+
+    // Key Binds
     [HideInInspector]
     public KeyCode ReloadKey = KeyCode.R;
     [HideInInspector]
     public KeyCode ADSKey = KeyCode.Mouse1;
     [HideInInspector]
     public KeyCode FireKey = KeyCode.Mouse0;
-
-    private bool playerControl = true;
-    private bool Active = false;
 
     // Recoil
     private bool recoilReset = true;
@@ -120,6 +141,8 @@ public class WeaponController : MonoBehaviour
     private bool canShoot = true;
 
     // Fire mode
+    private bool released = true;
+
     private float releaseTime = 0.0f;
     private float framesHeld = 0.0f;
     private bool HeldDown = false;
@@ -130,10 +153,13 @@ public class WeaponController : MonoBehaviour
 
     // ADS
     private Vector3 initCameraPos = Vector3.zero;
+
     private bool ads = false;
     private bool adsDone = false;
     private bool triggerADS = false;
     private bool triggerUnADS = false;
+
+    private float forwardOffset = 0.0f;
 
     private bool ADSToggled = false;
 
@@ -155,12 +181,12 @@ public class WeaponController : MonoBehaviour
 
     private Transform tempReload = null;
 
+    private Vector3 locPos;
+
     private bool reloadAds = false;
 
     // Audio
     private bool noAmmoPlay = true;
-
-    private bool Started = false;
 
     void OnEnable()
     {
@@ -258,6 +284,8 @@ public class WeaponController : MonoBehaviour
         fireCooldown = 1.0f / fireCooldown;
         currFireCooldown = 0.0f;
 
+        ShotDelay = fireCooldown;
+
         magSize = MagSize;
         clipCount = ClipCount;
 
@@ -267,6 +295,7 @@ public class WeaponController : MonoBehaviour
         AmmoText.text = magSize + "/" + reserveAmmo;
 
         initCameraPos = CameraPivot.localPosition;
+        locPos = GunMagazine.localPosition;
 
         adsMask = 1 << LayerMask.NameToLayer("PlayerViewGun") | (1 << LayerMask.NameToLayer("PlayerUI"));
         defualtMask = (1 << LayerMask.NameToLayer("PlayerViewGun")) | (1 << LayerMask.NameToLayer("PlayerViewModel")) | (1 << LayerMask.NameToLayer("PlayerUI"));
@@ -321,7 +350,7 @@ public class WeaponController : MonoBehaviour
                 reloadTime = ReloadSpeed;
                 playerAnim.SetFloat("ReloadTime", reloadTime);
 
-                tempReload = GunMagazine;
+                //tempReload = GunMagazine;
                 GunMagazine.parent = LeftHand;
 
                 playerAnim.SetFloat("ReloadSpeed", 1.0f / ReloadSpeed);
@@ -346,10 +375,10 @@ public class WeaponController : MonoBehaviour
                 reloadTime = 0.0f;
 
                 GunMagazine.parent = WeaponPivot;
-                GunMagazine.localPosition = new Vector3(0.0f, 0.1f, 0.0f);
+                GunMagazine.localPosition = locPos;// new Vector3(0.0f, 0.1f, 0.0f);
                 GunMagazine.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
                 GunMagazine.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-                GunMagazine = tempReload;
+                //GunMagazine = tempReload;
 
                 int mag = MagSize;
                 reserveAmmo += mag;
@@ -443,7 +472,7 @@ public class WeaponController : MonoBehaviour
 
                 RecoilVector = Vector3.zero;
 
-                player.FPSCamera.cullingMask = adsMask;
+                //player.FPSCamera.cullingMask = adsMask;
 
                 forwardOffset = 0.0f;
             }
@@ -493,7 +522,7 @@ public class WeaponController : MonoBehaviour
         if (Input.GetKey(FireKey) && playerControl)
         {
             // Spray / Tap Detection
-            if(!HeldDown)
+            if (!HeldDown && !semiAuto)
             {
                 // Spraying if trigger held from > 500ms
                 if(framesHeld > 0.5f)
@@ -509,7 +538,7 @@ public class WeaponController : MonoBehaviour
             }
             
             // Firing Bullet
-            if (canShoot && MagSize > 0 && !reloading)
+            if (canShoot && MagSize > 0 && !reloading && released)
             {
                 canShoot = false;
 
@@ -547,6 +576,11 @@ public class WeaponController : MonoBehaviour
                 RaycastHit hit;
                 if (Physics.Linecast(player.FPSCamera.transform.position, target, out hit))
                 {
+                    //
+                    Debug.DrawLine(player.FPSCamera.transform.position, hit.point, Color.red, 0.66f);
+                    if (PhotonNetwork.IsConnected)
+                        GetComponent<PhotonView>().RPC("DebugLineRPC", RpcTarget.Others, player.FPSCamera.transform.position, hit.point);
+
                     PlayerController enemy = hit.transform.gameObject.GetComponent<PlayerController>();
                     if (enemy && enemy != player)
                     {
@@ -563,16 +597,8 @@ public class WeaponController : MonoBehaviour
 
                         audioSource.PlayOneShot(FireHitSFX);
 
-                        /*if (PhotonNetwork.IsConnected)
-                            GetComponent<PhotonView>().RPC("DamageEnemy", RpcTarget.Others, enemy);*/
                         if (PhotonNetwork.IsConnected)
                             enemy.gameObject.GetPhotonView().RPC("ChangeHealthRPC", RpcTarget.AllBuffered, Damage);
-
-                        /*int currHealth = enemy.ChangeHealth(Damage);
-                        if(currHealth == 0)
-                        {
-                            c = Color.red;
-                        }*/
 
                         IEnumerator coroutine;
                         coroutine = ShowHitmarker(0.45f, c);
@@ -583,7 +609,6 @@ public class WeaponController : MonoBehaviour
                         if (!flashActive)
                         {
                             // Tracer
-
                             if (PhotonNetwork.IsConnected)
                             {
                                 GameObject f = PhotonNetwork.Instantiate("Tracer", BulletSpawn.position, BulletSpawn.rotation);
@@ -595,29 +620,17 @@ public class WeaponController : MonoBehaviour
                                 GameObject f = Instantiate(TracerPrefab, BulletSpawn.position, BulletSpawn.rotation);
                                 f.GetComponent<Tracer>().direction = dir;
                             }
-
-                            //if (PhotonNetwork.IsConnected)
-
-                            /*if (PhotonNetwork.IsConnected)
-                                GetComponent<PhotonView>().RPC("TracerRPC", RpcTarget.OthersBuffered);*/
                         }
-
-
-                        // Bullet World Impact
-                        /*GameObject g = Instantiate(ImpactDust, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
-                        Destroy(g, 0.5f);
-
-                        if (PhotonNetwork.IsConnected)
-                            GetComponent<PhotonView>().RPC("ActivateImpactDust", RpcTarget.Others, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
-
-                        g = Instantiate(BulletImpact, hit.point + hit.normal * 0.05f, Quaternion.FromToRotation(Vector3.up, hit.normal));
-                        Destroy(g, 8.5f);*/
 
                         audioSource.PlayOneShot(FireSFX);
                     }
                 }
                 else
                 {
+                    Debug.DrawLine(player.FPSCamera.transform.position, target, Color.green, 0.66f);
+                    if (PhotonNetwork.IsConnected)
+                        GetComponent<PhotonView>().RPC("DebugLineRPC", RpcTarget.Others, player.FPSCamera.transform.position, target);
+
                     audioSource.PlayOneShot(FireSFX);
                 }
 
@@ -671,18 +684,19 @@ public class WeaponController : MonoBehaviour
                     if (PhotonNetwork.IsConnected)
                         GetComponent<PhotonView>().RPC("ActivateMuzzleFlash", RpcTarget.Others);
                 }
+
+                if (semiAuto)
+                {
+                    released = false;
+                }
             }
             else if (MagSize <= 0 || reloading)
             {
-                //audioSource.clip = NoAmmoSFX;
-
                 if(noAmmoPlay)
                 {
                     IEnumerator coroutine;
                     coroutine = PlayNoAmmo(0.5f);
                     StartCoroutine(coroutine);
-
-                    //audioSource.PlayOneShot(NoAmmoSFX);
                 }
             }
             else // Shooting Cooldown
@@ -738,6 +752,8 @@ public class WeaponController : MonoBehaviour
         // Shooting Trigger Release
         if(Input.GetKeyUp(FireKey) && playerControl)
         {
+            released = true;
+
             framesHeld = 0.0f;
             HeldDown = false;
 
@@ -790,6 +806,12 @@ public class WeaponController : MonoBehaviour
         BulletSpawn = a.transform;
 
         //Debug.Log(BulletSpawn.name);
+    }
+
+    [PunRPC]
+    private void DebugLineRPC(Vector3 s, Vector3 e)
+    {
+        Debug.DrawLine(s, e, Color.red, 0.66f);
     }
 
     [PunRPC]

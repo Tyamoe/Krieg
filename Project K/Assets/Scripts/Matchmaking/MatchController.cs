@@ -61,7 +61,7 @@ public class MatchController : MonoBehaviourPunCallbacks
         UpdatePlayerListing();
         UpdateVoteText();
 
-        if (!Custom)
+        if (!Custom && PhotonNetwork.IsMasterClient)
         {
             RandomMatch();
         }
@@ -118,12 +118,22 @@ public class MatchController : MonoBehaviourPunCallbacks
         //modeCtrl.Initialize();
 
         Mode.GetPhotonView().RPC("Initialize", RpcTarget.AllBuffered);
+
+        voteStartMatchButton.interactable = true;
+        voteBotFillButton.interactable = true;
+        voteMapChangeButton.interactable = true;
+        voteModeChangeButton.interactable = true;
     }
 
     [PunRPC]
     void StartMatchRPC()
     {
         Lobby.SetActive(false);
+
+        voteStartMatchButton.interactable = true;
+        voteBotFillButton.interactable = true;
+        voteMapChangeButton.interactable = true;
+        voteModeChangeButton.interactable = true;
     }
 
     public void RandomMatch()
@@ -162,6 +172,8 @@ public class MatchController : MonoBehaviourPunCallbacks
 
         MapNameText.text = map;
 
+        voteMapChangeButton.interactable = true;
+
         photonView.RPC("UpdateMapRPC", RpcTarget.OthersBuffered, mapIndex);
     }
 
@@ -172,6 +184,8 @@ public class MatchController : MonoBehaviourPunCallbacks
         MapIcon.sprite = MapIcons[map_];
 
         MapNameText.text = map;
+
+        voteMapChangeButton.interactable = true;
     }
 
     public void RandomMode()
@@ -196,6 +210,8 @@ public class MatchController : MonoBehaviourPunCallbacks
 
         ModeNameText.text = mode;
 
+        voteModeChangeButton.interactable = true;
+
         photonView.RPC("UpdateModeRPC", RpcTarget.OthersBuffered, modeIndex);
     }
 
@@ -205,6 +221,8 @@ public class MatchController : MonoBehaviourPunCallbacks
         mode = Modes[mode_];
 
         ModeNameText.text = mode;
+
+        voteModeChangeButton.interactable = true;
     }
 
     #endregion
@@ -222,6 +240,8 @@ public class MatchController : MonoBehaviourPunCallbacks
 
     public void VoteStart()
     {
+        voteStartMatchButton.interactable = false;
+
         startVotes++;
         photonView.RPC("UpdateVoteStart", RpcTarget.OthersBuffered);
 
@@ -238,6 +258,8 @@ public class MatchController : MonoBehaviourPunCallbacks
 
     public void VoteBotFill()
     {
+        voteBotFillButton.interactable = false;
+
         botFillVotes++;
         photonView.RPC("UpdateBotFill", RpcTarget.OthersBuffered);
 
@@ -253,6 +275,8 @@ public class MatchController : MonoBehaviourPunCallbacks
 
     public void VoteChangeMap()
     {
+        voteMapChangeButton.interactable = false;
+
         mapChangeVotes++;
         photonView.RPC("UpdateChangeMap", RpcTarget.OthersBuffered);
 
@@ -268,6 +292,8 @@ public class MatchController : MonoBehaviourPunCallbacks
 
     public void VoteChangeMode()
     {
+        voteModeChangeButton.interactable = false;
+
         modeChangeVotes++;
         photonView.RPC("UpdateChangeMode", RpcTarget.OthersBuffered);
 
@@ -297,7 +323,7 @@ public class MatchController : MonoBehaviourPunCallbacks
             if (PhotonNetwork.IsMasterClient)
             {
                 Debug.Log("IsMasterClient: " + PhotonNetwork.NickName);
-                startTime = 5.0f;
+                startTime = 3.0f;
                 starting = true;
             }
 

@@ -7,39 +7,52 @@ public class PlayerController : MonoBehaviour
 {
     public PhotonView photonView;
 
-    public WeaponManager weapons;
+    [Header("PvP")]
+    public int Health = 100;
+
+    [Header("Movement")]
+    public float PlayerSpeed = 20.0f;
+    public float PlayerSprintSpeed = 4.0f;
+    public float PlayerJumpHeight = 2.8f;
+    public float PlayerClimbSpeed = 0.9f;
+
+    public Vector3 PlayerGravity = new Vector3(0.0f, -9.8f, 0.0f);
+
+    [Header("Audio")]
+    public AudioSource audioSource;
+
+    [Header("Controller References")]
     public CameraController cam;
+    public WeaponManager weapons;
     public PlayerSettingsFunctions settingsFuncs;
 
-    public Animator playerAnim;
+    //[HideInInspector]
+    public ModeController modeCtrl;
 
-    public GameObject[] Meshes;
-
+    [Header("Object References")]
     public Camera FPSCamera;
     public Camera EnvCamera;
 
+    public Animator playerAnim;
+
     public GameObject PlayerUI;
 
-    [Header("Variables/PvP")]
-    public int Health = 100;
+    public GameObject[] Meshes;
 
-    [Header("References/Audio")]
-    public AudioSource audioSource;
+    public Dictionary<WeaponClass, float> WeaponClassModifiers = new Dictionary<WeaponClass, float>()
+    {
+        {WeaponClass.Knife, 1.15f },
+        {WeaponClass.Pistol, 1.0f },
+        {WeaponClass.SMG, 0.98f },
+        {WeaponClass.Shotgun, 0.95f },
+        {WeaponClass.Rifle, 0.94f },
+        {WeaponClass.Sniper, 0.92f },
+    };
 
-    private GameObject InGameUI;
-    private GameObject SettingsUI;
+    /***************************************/
+    /*************** Prop Var **************/
+    /***************************************/
 
-    [HideInInspector]
-    public GameObject Crosshair;
-    [HideInInspector]
-    public GameObject Hitmarker;
-
-    [HideInInspector]
-    public TMPro.TextMeshProUGUI AmmoText;
-    [HideInInspector]
-    public TMPro.TextMeshProUGUI DebugText;
-
-    //[Header("Custom Settings")]
     private bool toggleCrouch_;
     public bool toggleCrouch
     {
@@ -172,30 +185,59 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    [Header("Variables/Movement")]
-    public float PlayerSpeed = 20.0f;
-    public float PlayerSprintSpeed = 4.0f;
-    public float PlayerJumpHeight = 2.8f;
-    public float PlayerClimbSpeed = 0.9f;
-    public Vector3 PlayerGravity = new Vector3(0.0f, -9.8f, 0.0f);
+    /***************************************/
+    /**************** PRIVATE **************/
+    /***************************************/
 
-    [Header("Display")]
-    public Vector3 PlayerVelocity;
+    private bool Started = false;
 
-    public bool WeaponHeld = false;
+    [HideInInspector]
+    public bool PlayerControl = true;
+    [HideInInspector]
+    public bool playerADS = false;
+    [HideInInspector]
+    public bool playerReload = false;
 
+    // Ref
     private CharacterController player;
+
+    private GameObject InGameUI;
+    private GameObject SettingsUI;
+
+    [HideInInspector]
+    public GameObject Crosshair;
+    [HideInInspector]
+    public GameObject Hitmarker;
+
+    [HideInInspector]
+    public TMPro.TextMeshProUGUI AmmoText;
+    [HideInInspector]
+    public TMPro.TextMeshProUGUI DebugText;
+
     [HideInInspector]
     public HandIK handIK;
 
-    private bool InputSprint = false;
-    private float InputX;
-    private float InputZ;
-
+    // Status
     private Vector3 lastPos;
+    private int currWeapon = 0;
+
+    // Movement
     private bool moving = true;
 
-    private int currWeapon = 0;
+    private bool InputSprint = false;
+    [SerializeField]
+    private float InputX;
+    [SerializeField]
+    private float InputZ;
+
+    private Vector3 PlayerVelocity;
+
+    private float WeaponMultiplier = 1.0f;
+
+    private float calcInX1 = 0.33f;
+    private float calcInX2 = 0.33f;
+    private float calcInZ1 = 0.33f;
+    private float calcInZ2 = 0.33f;
 
     // Stance
     [HideInInspector]
@@ -212,15 +254,7 @@ public class PlayerController : MonoBehaviour
     // UI
     private bool SettingsOpen = false;
 
-    [HideInInspector]
-    public bool PlayerControl = true;
-
-    [HideInInspector]
-    public bool playerADS = false;
-    public bool playerReload = false;
-
-    private bool Started = false;
-
+    // Key binds
     Dictionary<KeyActions, KeyCode> Keybinds = new Dictionary<KeyActions, KeyCode>()
     {
         { KeyActions.Forward, KeyCode.W },
@@ -246,9 +280,6 @@ public class PlayerController : MonoBehaviour
         { KeyActions.Menu, KeyCode.Escape },
         { KeyActions.Scoreboard, KeyCode.Tab },
     };
-
-    //[HideInInspector]
-    public ModeController modeCtrl;
 
     void Awake()
     {
@@ -298,40 +329,29 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        //----------------------------
-
-        /*toggleADS = false;
-        toggleCrouch = false;
-        SensitivityX = 1.0f;
-        SensitivityY = 1.0f;
-        ADSMultiplierX = 1.0f;
-        ADSMultiplierY = 1.0f;
-        FOV = 70.0f;
-
-        MasterVolume = 6.0f;
-        UIVolume = 10.0f;
-        */
-
-        //----------------------------
-
         PlayerVelocity = Vector3.zero;
-        DebugText.text = "Send Rate: " + PhotonNetwork.SendRate + " Serialize Rate: " + PhotonNetwork.SerializationRate;
-
         SettingsUI.SetActive(false);
-        //Hitmarker.SetActive(false); default invis
 
+        foreach (WeaponController weapon in weapons.weapons)
+        {
+            weapon.gameObject.SetActive(false);
+        }
         weapons.weapons[0].gameObject.SetActive(true);
-        weapons.weapons[1].gameObject.SetActive(false);
+        weapons.weapons[0].WeaponSwap(true);
 
         handIK.leftHandObj = weapons.weapons[0].Grip;
         handIK.rightHandObj = weapons.weapons[0].Trigger;
+
+        WeaponMultiplier = WeaponClassModifiers[weapons.weapons[0].weaponClass];
 
         if (PhotonNetwork.IsConnected)
             GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, 0);
 
         Started = true;
+
+        DebugText.text = "Send Rate: " + PhotonNetwork.SendRate + " Serialize Rate: " + PhotonNetwork.SerializationRate;
     }
-    
+
     void Update()
     {
         if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
@@ -356,8 +376,9 @@ public class PlayerController : MonoBehaviour
         }
 
         // Gravity
-        PlayerVelocity += PlayerGravity * Time.deltaTime;
+        PlayerVelocity += (PlayerGravity * WeaponMultiplier) * Time.deltaTime;
 
+        // In Menu
         if (!PlayerControl)
         {
             playerAnim.SetBool("Moving", false);
@@ -374,57 +395,129 @@ public class PlayerController : MonoBehaviour
             Jumping = false;
         }
 
-        // Jumping
-        if (Input.GetKeyDown(Keybinds[KeyActions.Jump]) && player.isGrounded && !Climbing)
+        // Hit head
+        if(Jumping && player.collisionFlags == CollisionFlags.Above)
         {
-            PlayerVelocity += transform.up * PlayerJumpHeight;
+            PlayerVelocity += PlayerGravity * Time.deltaTime;
+        }
+
+        // Jumping
+        if (Input.GetKeyDown(Keybinds[KeyActions.Jump]) && isGrounded() && !Climbing)
+        {
+            PlayerVelocity += transform.up * PlayerJumpHeight * WeaponMultiplier;
             Jumping = true;
         }
 
         // Sprint & Speed Mods
         InputSprint = Input.GetKey(Keybinds[KeyActions.Sprint]);
 
-        float multi = 1.0f;
+        float StateMultiplier = 1.0f;
 
-        if(InputSprint)
+        if (InputSprint)
         {
-            multi = PlayerSprintSpeed;
+            StateMultiplier = PlayerSprintSpeed;
         }
 
         if(Crouching)
         {
-            multi = 0.75f;
+            StateMultiplier = 0.75f;
         }
 
-        // WASD
-        //InputX = Input.GetAxis("Horizontal") * multi;
-        //InputZ = Input.GetAxis("Vertical") * multi;
-
-        //Debug.Log("InputX" + InputX);
-        //Debug.Log("InputZ" + InputZ);
         if (Input.GetKey(Keybinds[KeyActions.Left]))
         {
-            InputX = -1.0f * multi;
+            if (calcInX2 > 0.33f)
+            {
+                calcInX2 = 0.33f;
+                calcInX1 = 0.33f;
+            }
+            else
+            {
+                if (calcInX1 < 1.0f)
+                {
+                    calcInX1 += Time.deltaTime * 1.0f;
+
+                    InputX = -(1.0f + Mathf.Log(calcInX1)) * StateMultiplier * WeaponMultiplier;
+                }
+                else
+                {
+                    InputX = -1.0f * StateMultiplier * WeaponMultiplier;
+                }
+            }
         }
         else if (Input.GetKey(Keybinds[KeyActions.Right]))
         {
-            InputX = 1.0f * multi;
+            if(calcInX1 > 0.33f)
+            {
+                calcInX1 = 0.33f;
+                calcInX2 = 0.33f;
+            }
+            else
+            {
+                if (calcInX2 < 1.0f)
+                {
+                    calcInX2 += Time.deltaTime * 1.0f;
+
+                    InputX = (1.0f + Mathf.Log(calcInX2)) * StateMultiplier * WeaponMultiplier;
+                }
+                else
+                {
+                    InputX = 1.0f * StateMultiplier * WeaponMultiplier;
+                }
+            }
         }
         else
         {
             InputX = 0.0f;
+            calcInX1 = 0.33f;
+            calcInX2 = 0.33f;
         }
         if (Input.GetKey(Keybinds[KeyActions.Forward]))
         {
-            InputZ = 1.0f * multi;
+            if (calcInZ2 > 0.33f)
+            {
+                calcInZ2 = 0.33f;
+                calcInZ1 = 0.33f;
+            }
+            else
+            {
+                if (calcInZ1 < 1.0f)
+                {
+                    calcInZ1 += Time.deltaTime * 1.0f;
+
+                    InputZ = (1.0f + Mathf.Log(calcInZ1)) * StateMultiplier * WeaponMultiplier;
+                }
+                else
+                {
+                    InputZ = 1.0f * StateMultiplier * WeaponMultiplier;
+                }
+            }
         }
         else if (Input.GetKey(Keybinds[KeyActions.Back]))
         {
-            InputZ = -1.0f * multi;
+            if (calcInZ1 > 0.33f)
+            {
+                calcInZ1 = 0.33f;
+                calcInZ2 = 0.33f;
+            }
+            else
+            {
+                if (calcInZ2 < 1.0f)
+                {
+                    calcInZ2 += Time.deltaTime * 1.0f;
+
+                    InputZ = -(1.0f + Mathf.Log(calcInZ2)) * StateMultiplier * WeaponMultiplier;
+                }
+                else
+                {
+                    InputZ = -1.0f * StateMultiplier * WeaponMultiplier;
+                }
+            }
         }
         else
         {
             InputZ = 0.0f;
+            calcInZ1 = 0.33f;
+            calcInZ2 = 0.33f;
         }
 
         // Moving
@@ -446,11 +539,11 @@ public class PlayerController : MonoBehaviour
 
             if (tempInZ > 0.0f)
             {
-                PlayerVelocity += transform.up * PlayerClimbSpeed;
+                PlayerVelocity += transform.up * PlayerClimbSpeed * WeaponMultiplier;
             }
             else if (tempInZ < 0.0f)
             {
-                PlayerVelocity += transform.up * -PlayerClimbSpeed;
+                PlayerVelocity += transform.up * -PlayerClimbSpeed * WeaponMultiplier;
             }
         }
 
@@ -487,15 +580,17 @@ public class PlayerController : MonoBehaviour
         // Weapon Change
         if (Input.GetKeyDown(KeyCode.Alpha1) && !playerReload)
         {
+            weapons.weapons[currWeapon].WeaponSwap(false);
+            weapons.weapons[currWeapon].gameObject.SetActive(false);
             weapons.weapons[0].WeaponSwap(true);
             weapons.weapons[0].gameObject.SetActive(true);
-            weapons.weapons[1].WeaponSwap(false);
-            weapons.weapons[1].gameObject.SetActive(false);
 
             handIK.leftHandObj = weapons.weapons[0].Grip;
             handIK.rightHandObj = weapons.weapons[0].Trigger;
 
             currWeapon = 0;
+
+            WeaponMultiplier = WeaponClassModifiers[weapons.weapons[0].weaponClass];
 
             if (PhotonNetwork.IsConnected)
                 GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, 0);
@@ -503,8 +598,8 @@ public class PlayerController : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Alpha2) && !playerReload)
         {
-            weapons.weapons[0].WeaponSwap(false);
-            weapons.weapons[0].gameObject.SetActive(false);
+            weapons.weapons[currWeapon].WeaponSwap(false);
+            weapons.weapons[currWeapon].gameObject.SetActive(false);
             weapons.weapons[1].WeaponSwap(true);
             weapons.weapons[1].gameObject.SetActive(true);
 
@@ -512,6 +607,8 @@ public class PlayerController : MonoBehaviour
             handIK.rightHandObj = weapons.weapons[1].Trigger;
 
             currWeapon = 1;
+
+            WeaponMultiplier = WeaponClassModifiers[weapons.weapons[1].weaponClass];
 
             if (PhotonNetwork.IsConnected)
                 GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, 1);
@@ -532,6 +629,8 @@ public class PlayerController : MonoBehaviour
             handIK.leftHandObj = weapons.weapons[currWeapon].Grip;
             handIK.rightHandObj = weapons.weapons[currWeapon].Trigger;
 
+            WeaponMultiplier = WeaponClassModifiers[weapons.weapons[currWeapon].weaponClass];
+
             if (PhotonNetwork.IsConnected)
                 GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, currWeapon);
         }
@@ -550,8 +649,19 @@ public class PlayerController : MonoBehaviour
             handIK.leftHandObj = weapons.weapons[currWeapon].Grip;
             handIK.rightHandObj = weapons.weapons[currWeapon].Trigger;
 
+            WeaponMultiplier = WeaponClassModifiers[weapons.weapons[currWeapon].weaponClass];
+
             if (PhotonNetwork.IsConnected)
                 GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, currWeapon);
+        }
+
+        // Dev Timer
+        if (Input.GetKeyDown(KeyCode.Mouse4))
+        {
+            if(tempTimer)
+                Debug.Log("Time: " + tempTime.ToString("F2"));
+            tempTime = 0.0f;
+            tempTimer = !tempTimer;
         }
 
         // Camera Angles TODO
@@ -574,16 +684,27 @@ public class PlayerController : MonoBehaviour
 
         lastPos = transform.position;
 
-        if(tempFrame % 10 == 0)
-            DebugText.text = "Send Rate: " + PhotonNetwork.SendRate + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
-        tempFrame++;
+        if(tempFrame >= 5.0f)
+        {
+            tempFrame = 0.0f;
+            DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
+        }
+
+        if(tempTimer)
+        {
+            tempTime += Time.deltaTime;
+            DebugText.text = "Timer: " + tempTime.ToString("F2") + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
+        }
+        tempFrame += Time.deltaTime;
     }
 
-    int tempFrame = 0;
+    bool tempTimer = false;
+    float tempTime = 0.0f;
+    float tempFrame = 0.0f;
 
-    bool IsGrounded()
+    bool isGrounded()
     {
-        Vector3 feet = transform.Find("Cube").position;//transform.position - transform.up * 4.0f;
+        /*Vector3 feet = transform.Find("Cube").position;//transform.position - transform.up * 4.0f;
         Vector3 target = feet - transform.up * 0.4f;
 
         RaycastHit hit;
@@ -593,7 +714,8 @@ public class PlayerController : MonoBehaviour
             return true;
         }
 
-        return false;
+        return false;*/
+        return player.isGrounded || PlayerVelocity.y > -0.050f;
     }
 
     void Crouch(bool crouched)
@@ -678,6 +800,11 @@ public class PlayerController : MonoBehaviour
                 transform.position = new Vector3(0.0f, 40.0f, 0.0f);
             }
             return 0;
+        }
+
+        if(photonView.IsMine)
+        {
+            DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
         }
 
         return Health;

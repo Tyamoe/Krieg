@@ -500,12 +500,14 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
     {
         Debug.Log("LeaveRoom");
         //PhotonNetwork.DestroyPlayerObjects()
-        PhotonNetwork.Destroy(player.gameObject);
+        //PhotonNetwork.Destroy(player.gameObject);
         Debug.Log("Destroy");
         PhotonNetwork.LeaveRoom();
         Debug.Log("Now");
         PhotonNetwork.LoadLevel(0);
         Debug.Log("ssss");
+
+        //PhotonNetwork.SendAllOutgoingCommands
     }
 
     public override void OnLeftRoom()

@@ -47,7 +47,7 @@ public class KriegTransform : MonoBehaviour, IPunObservable
 
     void Update()
     {
-        if (!photonView.IsMine)
+        if (!photonView.IsMine && PhotonNetwork.IsConnected)
         {
             //Lag compensation
             double timeToReachGoal = currentPacketTime - lastPacketTime;

@@ -69,7 +69,7 @@ public class NetworkController : MonoBehaviourPunCallbacks
 
     IEnumerator InitializePlayer()
     {
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(0.33f);
         PhotonNetwork.ConnectUsingSettings();
     }
 
