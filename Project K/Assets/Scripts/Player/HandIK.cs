@@ -18,9 +18,14 @@ public class HandIK : MonoBehaviour
     public float LeftIK = 0.45f;
     public float RightIK = 0.45f;
 
+    public void UpdateLeftIK(float value)
+    {
+        LeftIK = value;
+    }
+
     void OnAnimatorIK()
     {
-        if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
+        //if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
         if (playerAnim)
         {
             if (ikActive)

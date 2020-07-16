@@ -44,11 +44,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06f52f0d24630474ea9fdd004cbe3e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  modeName: FFA
+  Teams: 0
   Respawn: 1
   TeamSpawn: 0
   RespawnTimer: 3
-  TimeLimit: 10
+  TimeLimit: 5
   ScoreLimit: 30
+  MaxHealth: 100
+  Regen: 1
+  RegenTime: 1.5
+  RegenTimeReset: 2
+  RegenAmount: 15
   players: []
 --- !u!114 &3905715073305217108
 MonoBehaviour:
@@ -65,10 +72,10 @@ MonoBehaviour:
   ObservedComponentsFoldoutOpen: 1
   Group: 0
   prefixField: -1
-  Synchronization: 0
+  Synchronization: 1
   OwnershipTransfer: 0
   ObservedComponents:
-  - {fileID: 0}
+  - {fileID: 8003210380110883300}
   viewIdField: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0

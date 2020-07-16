@@ -36,7 +36,6 @@ public class MainMenuController : MonoBehaviourPunCallbacks
     public override void OnConnectedToMaster()
     {
         Connected = true;
-
         ConnectionStatus.color = Color.green;
 
         Server.text = PhotonNetwork.CloudRegion + ":" + PhotonNetwork.CurrentCluster + ":" + PhotonNetwork.CurrentLobby;
@@ -44,30 +43,32 @@ public class MainMenuController : MonoBehaviourPunCallbacks
 
     public override void OnJoinedLobby()
     {
-        Debug.Log("Joined Lobby");
         Server.text = PhotonNetwork.CloudRegion + ":" + PhotonNetwork.CurrentCluster + ":" + PhotonNetwork.CurrentLobby;
     }
 
     public override void OnLobbyStatisticsUpdate(List<TypedLobbyInfo> lobbyStatistics)
     {
-        Debug.Log("Lobby Stats");
+        Debug.Log("MainMenuController OnLobbyStatisticsUpdate");
         Debug.Log("-------------------------------------------");
         foreach (TypedLobbyInfo l in lobbyStatistics)
         {
-            Debug.Log(l.Name + ":" + l.PlayerCount + ":" + l.RoomCount);
+            Debug.Log(l.Name + " : " + l.PlayerCount + " : " + l.RoomCount);
         }
+        Debug.Log("-------------------------------------------");
     }
 
     public override void OnDisconnected(DisconnectCause cause)
     {
-        Debug.Log("Disconnected");
-        Connected = false;
+        Debug.Log("MainMenuController OnDisconnected");
 
+        Connected = false;
         ConnectionStatus.color = Color.white;
     }
 
     public void Matchmaking()
     {
+        Game.PlayLow();
+
         string roomName = "Room1234";
 
         RoomOptions roomOpt = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10 };
@@ -76,6 +77,8 @@ public class MainMenuController : MonoBehaviourPunCallbacks
 
     public void LogOut()
     {
+        Game.PlayHigh();
+
         PhotonNetwork.Disconnect();
 
         MainMenuPanel.SetActive(true);
@@ -87,6 +90,8 @@ public class MainMenuController : MonoBehaviourPunCallbacks
 
     public void Host()
     {
+        Game.PlayLow();
+
         CustomMatchPanel.SetActive(true);
         MatchListPanel.SetActive(false);
         ProfilePanel.SetActive(false);
@@ -96,6 +101,8 @@ public class MainMenuController : MonoBehaviourPunCallbacks
 
     public void List()
     {
+        Game.PlayLow();
+
         MatchListPanel.SetActive(true);
         ProfilePanel.SetActive(false);
         SettingsPanel.SetActive(false);
@@ -105,6 +112,8 @@ public class MainMenuController : MonoBehaviourPunCallbacks
 
     public void Profile()
     {
+        Game.PlayLow();
+
         ProfilePanel.SetActive(true);
         SettingsPanel.SetActive(false);
         MainMenuPanel.SetActive(false);
@@ -114,6 +123,8 @@ public class MainMenuController : MonoBehaviourPunCallbacks
 
     public void Settings()
     {
+        Game.PlayLow();
+
         SettingsPanel.SetActive(true);
         MainMenuPanel.SetActive(false);
         MatchListPanel.SetActive(false);
@@ -123,14 +134,13 @@ public class MainMenuController : MonoBehaviourPunCallbacks
 
     public void BackToMain()
     {
+        Game.PlayHigh();
+
         MainMenuPanel.SetActive(true);
         MatchListPanel.SetActive(false);
         CustomMatchPanel.SetActive(false);
         SettingsPanel.SetActive(false);
         ProfilePanel.SetActive(false);
-        
-        if(matchListCtrl.matchList.Count > 0)
-            Debug.Log("1111Custom: " + matchListCtrl.matchList[0].CustomProperties.ToStringFull());
     }
 
 }

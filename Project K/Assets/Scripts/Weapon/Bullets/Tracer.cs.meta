@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b32d51fc80fee8e4cbb807c6612f76a1
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - ImpactDust: {fileID: 2721845254008523264, guid: 22e2de48a86fa67499a6b4e0031e8d72,
+      type: 3}
+  - BulletImpact: {fileID: 8477446236558398896, guid: 79927596c23303545a3d1d60459335bb,
+      type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -94,7 +94,7 @@ public class WeaponController : MonoBehaviour
     public Transform Grip;
     public Transform Trigger;
 
-    [Header("References/Audio")]
+    [Header("Audio References")]
     public AudioSource audioSource;
     public AudioClip FireSFX;
     public AudioClip FireHitSFX;
@@ -169,6 +169,10 @@ public class WeaponController : MonoBehaviour
     private int defualtMask;
     private int adsMask;
 
+    // Hipfire
+    private float hipfireSpreadX;
+    private float hipfireSpreadY;
+
     // Reload
     private bool reloading = false;
     private bool triggerReload = false;
@@ -202,6 +206,7 @@ public class WeaponController : MonoBehaviour
             if (Started)
             {
                 UpdateWeaponUI();
+                UpdateHipfireSpread();
 
                 if (player.playerADS)
                 {
@@ -303,6 +308,10 @@ public class WeaponController : MonoBehaviour
         Crosshair = player.Crosshair;
         Hitmarker = player.Hitmarker.GetComponent<RawImage>();
 
+        //hipfireSpreadX = HipfireSpreadX;
+        //hipfireSpreadY = HipfireSpreadY;
+        UpdateHipfireSpread();
+
         Started = true;
     }
     
@@ -358,7 +367,12 @@ public class WeaponController : MonoBehaviour
                 Crosshair.SetActive(false);
 
                 player.playerReload = true;
+
                 player.handIK.LeftIK = 0.0f;
+                if (PhotonNetwork.IsConnected)
+                {
+                    photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, 0.0f);
+                }
             }
         }
 
@@ -399,7 +413,12 @@ public class WeaponController : MonoBehaviour
                 }
 
                 player.playerReload = false;
+
                 player.handIK.LeftIK = 0.45f;
+                if (PhotonNetwork.IsConnected)
+                {
+                    photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, 0.45f);
+                }
             }
         }
 
@@ -562,7 +581,7 @@ public class WeaponController : MonoBehaviour
                 else
                 {
                     Vector2 r = Random.insideUnitCircle;
-                    Vector3 recoilV = new Vector3(r.x * HipfireSpreadX, r.y * HipfireSpreadY, 0.0f);
+                    Vector3 recoilV = new Vector3(r.x * hipfireSpreadX, r.y * hipfireSpreadY, 0.0f);
                     recoilV *= 0.5f;
 
                     Vector3 RecoilV = recoilV.x * player.FPSCamera.transform.right;
@@ -573,6 +592,7 @@ public class WeaponController : MonoBehaviour
                 }
                 target = player.FPSCamera.transform.position + (dir * 10000.0f);
 
+                //RaycastHit[] hits = Physics.RaycastAll(player.FPSCamera.transform.position, dir, 1000.0f);
                 RaycastHit hit;
                 if (Physics.Linecast(player.FPSCamera.transform.position, target, out hit))
                 {
@@ -598,7 +618,7 @@ public class WeaponController : MonoBehaviour
                         audioSource.PlayOneShot(FireHitSFX);
 
                         if (PhotonNetwork.IsConnected)
-                            enemy.gameObject.GetPhotonView().RPC("ChangeHealthRPC", RpcTarget.AllBuffered, Damage);
+                            enemy.gameObject.GetPhotonView().RPC("ChangeHealthRPC", RpcTarget.All, Damage, player.FPSCamera.transform.forward, player.photonView.ViewID);
 
                         IEnumerator coroutine;
                         coroutine = ShowHitmarker(0.45f, c);
@@ -611,9 +631,11 @@ public class WeaponController : MonoBehaviour
                             // Tracer
                             if (PhotonNetwork.IsConnected)
                             {
-                                GameObject f = PhotonNetwork.Instantiate("Tracer", BulletSpawn.position, BulletSpawn.rotation);
-                                f.GetComponent<Tracer>().direction = dir;
-                                f.GetPhotonView().RPC("Me", RpcTarget.MasterClient, dir);
+                                GetComponent<PhotonView>().RPC("InitiateTracing", RpcTarget.All, dir);
+
+                                //GameObject f = PhotonNetwork.Instantiate("Tracer", BulletSpawn.position, BulletSpawn.rotation);
+                                //f.GetComponent<Tracer>().direction = dir;
+                                //f.GetPhotonView().RPC("Me", RpcTarget.MasterClient, dir);
                             }
                             else
                             {
@@ -790,6 +812,22 @@ public class WeaponController : MonoBehaviour
         noAmmoPlay = true;
     }
 
+    float mapToRange(float val, float r1s, float r1e, float r2s, float r2e)
+    {
+        return (val - r1s) / (r1e - r1s) * (r2e - r2s) + r2s;
+    }
+
+    public void UpdateHipfireSpread(float x = 1.0f, float y = 1.0f)
+    {
+        hipfireSpreadX = HipfireSpreadX * x;
+        hipfireSpreadY = HipfireSpreadY * y;
+
+        float sx = mapToRange(hipfireSpreadX, 0.0f, 1.0f, 0.8f, 1.8f);
+        float sy = mapToRange(hipfireSpreadY, 0.0f, 1.0f, 0.8f, 1.8f);
+
+        Crosshair.GetComponent<RectTransform>().localScale = new Vector3(sx, sy, 1.0f);
+    }
+
     public void UpdateWeaponUI()
     {
         AmmoText.text = MagSize + "/" + (reserveAmmo < 0 ? 0 : reserveAmmo);
@@ -806,6 +844,13 @@ public class WeaponController : MonoBehaviour
         BulletSpawn = a.transform;
 
         //Debug.Log(BulletSpawn.name);
+    }
+
+    [PunRPC]
+    void InitiateTracing(Vector3 diri)
+    {
+        GameObject f = Instantiate(TracerPrefab, BulletSpawn.position, BulletSpawn.rotation);
+        f.GetComponent<Tracer>().direction = diri;
     }
 
     [PunRPC]
@@ -835,11 +880,4 @@ public class WeaponController : MonoBehaviour
         //AudioSource.PlayClipAtPoint(FireSFX, position);
         audioSource.PlayOneShot(FireSFX);
     }
-
-    [PunRPC]
-    private void DamageEnemy(PlayerController enemy)
-    {
-        enemy.ChangeHealth(Damage);
-    }
-
 }

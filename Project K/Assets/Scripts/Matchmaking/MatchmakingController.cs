@@ -21,23 +21,24 @@ public class MatchmakingController : MonoBehaviourPunCallbacks
 
     public override void OnJoinedRoom()
     {
-        Debug.Log("OnJoinedRoom");
+        Debug.Log("MatchmakingController OnJoinedRoom");
         Debug.Log(PhotonNetwork.NickName);
 
+        // Load Match or Join
         EnterGame();
     }
 
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
-        Debug.Log("OnJoinRoomFailed");
+        Debug.Log("MatchmakingController OnJoinRoomFailed");
     }
 
     void EnterGame()
     {
         if (PhotonNetwork.IsMasterClient)
         {
+            Debug.Log("MatchmakingController Creating Game");
             PhotonNetwork.LoadLevel(SceneIndex);
-            Debug.Log("Creating Game");
         }
     }
 }

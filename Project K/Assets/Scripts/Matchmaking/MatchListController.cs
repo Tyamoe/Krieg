@@ -25,39 +25,17 @@ public class MatchListController : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        //PhotonNetwork.NickName = "Player" + UnityEngine.Random.Range(1, 1001);
-
-        Debug.Log("Name: " + PhotonNetwork.NickName);
+        Debug.Log("MatchListController OnConnectedToMaster");
     }
 
     public override void OnJoinedLobby()
     {
-        //gameObject.SetActive(false);
-
-
-
-
-        //FtpWebRequest request = (FtpWebRequest)WebRequest.Create("ftp://www.tyamoe.com/krieg/rooms/");
-        /*FtpWebRequest request = (FtpWebRequest)WebRequest.Create("ftp://home681734469.1and1-data.host/krieg/rooms/");
-        request.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
-
-        request.Credentials = new NetworkCredential("u89290814", "VJDaRTKXu9S2mY");
-
-        FtpWebResponse response = (FtpWebResponse)request.GetResponse();
-
-        Stream responseStream = response.GetResponseStream();
-        StreamReader reader = new StreamReader(responseStream);
-        Console.WriteLine(reader.ReadToEnd());
-
-        Console.WriteLine($"Directory List Complete, status {response.StatusDescription}");
-
-        reader.Close();
-        response.Close();*/
+        Debug.Log("MatchListController OnJoinedLobby");
     }
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
-        Debug.Log("OnRoomListUpdate");
+        Debug.Log("MatchListController OnRoomListUpdate");
 
         UpdateMatchListings(roomList);
     }
@@ -79,36 +57,6 @@ public class MatchListController : MonoBehaviourPunCallbacks
                 continue;
             }
             
-            /*if (matchListing != null && matchListing.ContainsKey(room.Name))
-            {
-                GameObject listing = matchListing[room.Name];
-                MatchListing m = listing.GetComponent<MatchListing>();
-
-                string roomDetails = "";
-
-                if (room.CustomProperties.ContainsKey("Mode"))
-                {
-                    roomDetails = (string)room.CustomProperties["Mode"];
-                }
-                else
-                {
-                    roomDetails = "*";
-                }
-
-                roomDetails += " on ";
-
-                if (room.CustomProperties.ContainsKey("Map"))
-                {
-                    roomDetails += (string)room.CustomProperties["Map"];
-                }
-                else
-                {
-                    roomDetails += "*";
-                }
-
-                m.UpdateListing(room.Name, room.PlayerCount, room.MaxPlayers, roomDetails);
-            }
-            else*/
             {
                 GameObject listing = Instantiate(matchListPrefab, matchContainer);
                 MatchListing m = listing.GetComponent<MatchListing>();

@@ -1,14 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Photon.Pun;
 
 public class PlayerController : MonoBehaviour
 {
     public PhotonView photonView;
-
-    [Header("PvP")]
-    public int Health = 100;
 
     [Header("Movement")]
     public float PlayerSpeed = 20.0f;
@@ -20,6 +18,10 @@ public class PlayerController : MonoBehaviour
 
     [Header("Audio")]
     public AudioSource audioSource;
+    public AudioClip WalkingSFX;
+    public AudioClip HitSFX;
+    public AudioClip HitDeadSFX;
+    public AudioClip LowHealthSFX;
 
     [Header("Controller References")]
     public CameraController cam;
@@ -41,12 +43,12 @@ public class PlayerController : MonoBehaviour
 
     public Dictionary<WeaponClass, float> WeaponClassModifiers = new Dictionary<WeaponClass, float>()
     {
-        {WeaponClass.Knife, 1.15f },
-        {WeaponClass.Pistol, 1.0f },
-        {WeaponClass.SMG, 0.98f },
-        {WeaponClass.Shotgun, 0.95f },
-        {WeaponClass.Rifle, 0.94f },
-        {WeaponClass.Sniper, 0.92f },
+        { WeaponClass.Knife, 1.15f },
+        { WeaponClass.Pistol, 1.0f },
+        { WeaponClass.SMG, 0.98f },
+        { WeaponClass.Shotgun, 0.95f },
+        { WeaponClass.Rifle, 0.94f },
+        { WeaponClass.Sniper, 0.92f },
     };
 
     /***************************************/
@@ -137,7 +139,7 @@ public class PlayerController : MonoBehaviour
 
             ADSMultiplierY_ = value;
             cam.ADSMultiplierY = value;
-            if(!Started)
+            if (!Started)
                 settingsFuncs.MultiYSlider.value = value;
         }
     }
@@ -165,7 +167,7 @@ public class PlayerController : MonoBehaviour
             if (masterVolume == value) return;
 
             masterVolume = value;
-            AudioListener.volume = value / 10.0f;
+            AudioListener.volume = value;
             if (!Started)
                 settingsFuncs.MasterSlider.value = value;
         }
@@ -174,7 +176,7 @@ public class PlayerController : MonoBehaviour
     private float uiVolume;
     public float UIVolume
     {
-        get { return uiVolume / 10.0f; }
+        get { return uiVolume; }
         set
         {
             if (uiVolume == value) return;
@@ -185,12 +187,34 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public int Health
+    {
+        get { return health;  }
+        set
+        {
+            health = value;
+            if(photonView.IsMine)
+            {
+                if (modeCtrl)
+                {
+                    HealthBar.size = value / (float)modeCtrl.MaxHealth;
+                }
+                else
+                {
+                    HealthBar.size = value / 100.0f;
+                }
+            }
+        }
+    }
+
     /***************************************/
     /**************** PRIVATE **************/
     /***************************************/
 
     private bool Started = false;
 
+    [HideInInspector]
+    public bool PlayerLocked = false;
     [HideInInspector]
     public bool PlayerControl = true;
     [HideInInspector]
@@ -214,20 +238,77 @@ public class PlayerController : MonoBehaviour
     [HideInInspector]
     public TMPro.TextMeshProUGUI DebugText;
 
+    private GameObject damageIndicator;
+
+    private Scrollbar HealthBar;
+    private Image HealthBarStatus;
+
     [HideInInspector]
     public HandIK handIK;
+
+    // Health
+    private bool Damaged = false;
+    private float healthTimer = 0.0f;
+    private bool lowHealth = false;
+
+    private int health = 100;
+
+    private bool dead = false;
 
     // Status
     private Vector3 lastPos;
     private int currWeapon = 0;
 
+    private bool Swapping = false;
+
     // Movement
-    private bool moving = true;
+    private bool Moving = false;
+    private bool moving
+    {
+        get { return Moving; }
+        set
+        {
+            Moving = value;
+            if(value)
+            {
+                if(Crouching)
+                {
+                    foreach (WeaponController weapon in weapons.weapons)
+                    {
+                        weapon.UpdateHipfireSpread(0.7f, 0.7f);
+                    }
+                }
+                else
+                {
+                    foreach (WeaponController weapon in weapons.weapons)
+                    {
+                        weapon.UpdateHipfireSpread(1.45f, 1.45f);
+                    }
+                }
+            }
+            else
+            {
+                if (Crouching)
+                {
+                    foreach (WeaponController weapon in weapons.weapons)
+                    {
+                        weapon.UpdateHipfireSpread(0.45f, 0.45f);
+                    }
+                }
+                else
+                {
+                    foreach (WeaponController weapon in weapons.weapons)
+                    {
+                        weapon.UpdateHipfireSpread();
+                    }
+                }
+            }
+        }
+
+    }
 
     private bool InputSprint = false;
-    [SerializeField]
     private float InputX;
-    [SerializeField]
     private float InputZ;
 
     private Vector3 PlayerVelocity;
@@ -283,6 +364,9 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
+        player = GetComponent<CharacterController>();
+        handIK = GetComponent<HandIK>();
+
         if (!photonView.IsMine && PhotonNetwork.IsConnected)
         {
             FPSCamera.enabled = false;
@@ -297,10 +381,18 @@ public class PlayerController : MonoBehaviour
 
             PlayerUI.SetActive(false);
 
+            PlayerLocked = true;
+            PlayerControl = false;
+
             return;
         }
         else
         {
+            if(PhotonNetwork.IsConnected)
+            {
+                PlayerLocked = true;
+                PlayerControl = false;
+            }
             FPSCamera.enabled = true;
             EnvCamera.enabled = true;
 
@@ -310,21 +402,23 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
-        player = GetComponent<CharacterController>();
-        handIK = GetComponent<HandIK>();
-
         InGameUI = PlayerUI.transform.Find("InGame").gameObject;
         SettingsUI = PlayerUI.transform.Find("Settings").gameObject;
 
+        damageIndicator = InGameUI.transform.Find("DamageIndicator").gameObject;
+        damageIndicator.SetActive(false);
         Hitmarker = InGameUI.transform.Find("Hitmarker").gameObject;
         Crosshair = InGameUI.transform.Find("Crosshair").gameObject;
-        AmmoText = InGameUI.transform.Find("Ammo").gameObject.GetComponent<TMPro.TextMeshProUGUI>();
+        AmmoText = InGameUI.transform.Find("Ammo").Find("AmmoText").gameObject.GetComponent<TMPro.TextMeshProUGUI>();
         DebugText = InGameUI.transform.Find("Debug").gameObject.GetComponent<TMPro.TextMeshProUGUI>();
+
+        HealthBar = InGameUI.transform.Find("HealthBar").GetComponent<Scrollbar>();
+        HealthBarStatus = HealthBar.transform.Find("Sliding Area").Find("HealthBarStatus").GetComponent<Image>();
     }
 
     void Start()
     {
-        if(!photonView.IsMine && PhotonNetwork.IsConnected)
+        if (!photonView.IsMine && PhotonNetwork.IsConnected)
         {
             return;
         }
@@ -356,7 +450,7 @@ public class PlayerController : MonoBehaviour
     {
         if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
 
-        if (Input.GetKeyDown(Keybinds[KeyActions.Menu]))
+        if (Input.GetKeyDown(Keybinds[KeyActions.Menu]) && !PlayerLocked)
         {
             SettingsOpen = !SettingsOpen;
             SettingsUI.SetActive(SettingsOpen);
@@ -379,7 +473,7 @@ public class PlayerController : MonoBehaviour
         PlayerVelocity += (PlayerGravity * WeaponMultiplier) * Time.deltaTime;
 
         // In Menu
-        if (!PlayerControl)
+        if (!PlayerControl || PlayerLocked)
         {
             playerAnim.SetBool("Moving", false);
 
@@ -406,12 +500,25 @@ public class PlayerController : MonoBehaviour
         {
             PlayerVelocity += transform.up * PlayerJumpHeight * WeaponMultiplier;
             Jumping = true;
+            step = stepss * 1.25f;
         }
 
         // Sprint & Speed Mods
-        InputSprint = Input.GetKey(Keybinds[KeyActions.Sprint]);
-
         float StateMultiplier = 1.0f;
+
+        //InputSprint = Input.GetKey(Keybinds[KeyActions.Sprint]);
+        if (Input.GetKeyDown(Keybinds[KeyActions.Sprint]))
+        {
+            InputSprint = true;
+
+            step *= 0.75f;
+            StateMultiplier = PlayerSprintSpeed;
+        }
+        if (Input.GetKeyUp(Keybinds[KeyActions.Sprint]))
+        {
+            InputSprint = false;
+            step = stepss;
+        }
 
         if (InputSprint)
         {
@@ -423,6 +530,7 @@ public class PlayerController : MonoBehaviour
             StateMultiplier = 0.75f;
         }
 
+        // Movement Calculation
         if (Input.GetKey(Keybinds[KeyActions.Left]))
         {
             if (calcInX2 > 0.33f)
@@ -523,11 +631,15 @@ public class PlayerController : MonoBehaviour
         // Moving
         if (Mathf.Abs(InputX) > 0.0f || Mathf.Abs(InputZ) > 0.0f)
         {
-            moving = true;
+            if(!moving)
+                moving = true;
+
+            PlayWalkingAux();
         }
         else
         {
-            moving = false;
+            if (moving)
+                moving = false;
         }
         playerAnim.SetBool("Moving", moving);
 
@@ -578,50 +690,30 @@ public class PlayerController : MonoBehaviour
         }
 
         // Weapon Change
-        if (Input.GetKeyDown(KeyCode.Alpha1) && !playerReload)
+        if (Input.GetKeyDown(KeyCode.Alpha1) && !playerReload && !Swapping && currWeapon != 0)
         {
             weapons.weapons[currWeapon].WeaponSwap(false);
             weapons.weapons[currWeapon].gameObject.SetActive(false);
-            weapons.weapons[0].WeaponSwap(true);
-            weapons.weapons[0].gameObject.SetActive(true);
 
-            handIK.leftHandObj = weapons.weapons[0].Grip;
-            handIK.rightHandObj = weapons.weapons[0].Trigger;
-
-            currWeapon = 0;
-
-            WeaponMultiplier = WeaponClassModifiers[weapons.weapons[0].weaponClass];
-
-            if (PhotonNetwork.IsConnected)
-                GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, 0);
+            StartCoroutine(SwitchWeapon(0));
 
         }
-        if (Input.GetKeyDown(KeyCode.Alpha2) && !playerReload)
+        if (Input.GetKeyDown(KeyCode.Alpha2) && !playerReload && !Swapping && currWeapon != 1)
         {
             weapons.weapons[currWeapon].WeaponSwap(false);
             weapons.weapons[currWeapon].gameObject.SetActive(false);
-            weapons.weapons[1].WeaponSwap(true);
-            weapons.weapons[1].gameObject.SetActive(true);
 
-            handIK.leftHandObj = weapons.weapons[1].Grip;
-            handIK.rightHandObj = weapons.weapons[1].Trigger;
-
-            currWeapon = 1;
-
-            WeaponMultiplier = WeaponClassModifiers[weapons.weapons[1].weaponClass];
-
-            if (PhotonNetwork.IsConnected)
-                GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, 1);
+            StartCoroutine(SwitchWeapon(1));
         }
 
-        if (Input.GetKeyDown(Keybinds[KeyActions.SwapDown]))
+        if (Input.GetKeyDown(Keybinds[KeyActions.SwapDown]) && !Swapping)
         {
             int prev = currWeapon;
             currWeapon--;
 
             currWeapon = currWeapon < 0 ? weapons.weapons.Count - 1 : currWeapon;
 
-            weapons.weapons[prev].WeaponSwap(false);
+            /*weapons.weapons[prev].WeaponSwap(false);
             weapons.weapons[prev].gameObject.SetActive(false);
             weapons.weapons[currWeapon].WeaponSwap(true);
             weapons.weapons[currWeapon].gameObject.SetActive(true);
@@ -633,15 +725,21 @@ public class PlayerController : MonoBehaviour
 
             if (PhotonNetwork.IsConnected)
                 GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, currWeapon);
+            */
+
+            weapons.weapons[prev].WeaponSwap(false);
+            weapons.weapons[prev].gameObject.SetActive(false);
+
+            StartCoroutine(SwitchWeapon(currWeapon));
         }
-        else if (Input.GetKeyDown(Keybinds[KeyActions.SwapUp]))
+        else if (Input.GetKeyDown(Keybinds[KeyActions.SwapUp]) && !Swapping)
         {
             int prev = currWeapon;
             currWeapon++;
 
             currWeapon = currWeapon >= weapons.weapons.Count ? 0 : currWeapon;
 
-            weapons.weapons[prev].WeaponSwap(false);
+            /*weapons.weapons[prev].WeaponSwap(false);
             weapons.weapons[prev].gameObject.SetActive(false);
             weapons.weapons[currWeapon].WeaponSwap(true);
             weapons.weapons[currWeapon].gameObject.SetActive(true);
@@ -653,38 +751,60 @@ public class PlayerController : MonoBehaviour
 
             if (PhotonNetwork.IsConnected)
                 GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, currWeapon);
+            */
+
+            weapons.weapons[prev].WeaponSwap(false);
+            weapons.weapons[prev].gameObject.SetActive(false);
+
+            StartCoroutine(SwitchWeapon(currWeapon));
         }
+
+        if (Damaged)
+        {
+            if (!modeCtrl)
+            {
+                healthTimer += Time.deltaTime;
+                if (healthTimer >= 1.5f)
+                {
+                    healthTimer = 0.0f;
+                    if (PhotonNetwork.IsConnected)
+                        photonView.RPC("ChangeHealthRPC", RpcTarget.AllBuffered, -15);
+                }
+            }
+            else
+            {
+                healthTimer += Time.deltaTime;
+                if (healthTimer >= modeCtrl.RegenTime)
+                {
+                    healthTimer = 0.0f;
+                    if (PhotonNetwork.IsConnected)
+                        photonView.RPC("ChangeHealthRPC", RpcTarget.AllBuffered, -modeCtrl.RegenAmount);
+                }
+            }
+        }
+
+        lastPos = transform.position;
 
         // Dev Timer
         if (Input.GetKeyDown(KeyCode.Mouse4))
         {
-            if(tempTimer)
+            /*GameObject player = PhotonView.Find(photonView.ViewID).gameObject;
+            if (player)
+            {
+                Debug.Log(player.name);
+            }
+            else
+            {
+                Debug.Log("Oof2");
+            }*/
+
+            if (tempTimer)
                 Debug.Log("Time: " + tempTime.ToString("F2"));
             tempTime = 0.0f;
             tempTimer = !tempTimer;
         }
 
-        // Camera Angles TODO
-        /*if (Input.GetKeyDown(KeyCode.F4))
-        {
-            cam.SetCamAngle(0);
-        }
-        if (Input.GetKeyDown(KeyCode.F5))
-        {
-            cam.SetCamAngle(1);
-        }
-        if (Input.GetKeyDown(KeyCode.F6))
-        {
-            cam.SetCamAngle(2);
-        }
-        if (Input.GetKeyDown(KeyCode.F7))
-        {
-            cam.SetCamAngle(3);
-        }*/
-
-        lastPos = transform.position;
-
-        if(tempFrame >= 5.0f)
+        if (tempFrame >= 5.0f)
         {
             tempFrame = 0.0f;
             DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
@@ -696,26 +816,109 @@ public class PlayerController : MonoBehaviour
             DebugText.text = "Timer: " + tempTime.ToString("F2") + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
         }
         tempFrame += Time.deltaTime;
+
+        // Noise
+        if(!canPlay)
+        {
+            stepTime1 += Time.deltaTime;
+
+            if(stepTime1 >= step)
+            {
+                stepTime1 = 0.0f;
+
+                stepPlaying = true;
+            }
+        }
+
+        if(stepPlaying)
+        {
+            stepTime += Time.deltaTime;
+
+            if (stepTime >= step * 0.5f)
+            {
+                stepPlaying = false;
+                stepTime = 0.0f;
+
+                canPlay = true;
+            }
+        }
     }
+
+    float step = 0.283f;
+    float stepss = 0.283f;
 
     bool tempTimer = false;
     float tempTime = 0.0f;
     float tempFrame = 0.0f;
 
+    float stepTime1 = 0.0f;
+    float stepTime = 0.0f;
+    bool stepPlaying = false;
+    bool canPlay = true;
+
+    void PlayWalkingAux()
+    {
+        if (canPlay)
+        {
+            canPlay = false;
+
+            stepTime1 = 0.0f;
+            stepTime = 0.0f;
+
+            if (PhotonNetwork.IsConnected)
+                photonView.RPC("PlayWalkingRPC", RpcTarget.All);
+            else
+            {
+                audioSource.PlayOneShot(WalkingSFX, 0.5f);
+            }
+        }
+    }
+
     bool isGrounded()
     {
-        /*Vector3 feet = transform.Find("Cube").position;//transform.position - transform.up * 4.0f;
-        Vector3 target = feet - transform.up * 0.4f;
+        return player.isGrounded || PlayerVelocity.y > -0.050f && PlayerVelocity.y <= 0.0f;
+    }
 
-        RaycastHit hit;
-        if (Physics.Linecast(feet, target, out hit))
+    IEnumerator SwitchWeapon(int i)
+    {
+        Swapping = true;
+
+        float swapTime = Mathf.Pow( (1.0f / WeaponClassModifiers[weapons.weapons[i].weaponClass] ) , 3.0f);
+
+        handIK.leftHandObj = transform;
+        handIK.rightHandObj = transform;
+        handIK.LeftIK = 0.6f;
+        if (PhotonNetwork.IsConnected)
         {
-            Debug.Log(hit.transform.name);
-            return true;
+            photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, 0.6f);
         }
 
-        return false;*/
-        return player.isGrounded || PlayerVelocity.y > -0.050f;
+        if (PhotonNetwork.IsConnected)
+            GetComponent<PhotonView>().RPC("PreWeaponSwap", RpcTarget.OthersBuffered);
+
+        yield return new WaitForSeconds(swapTime);
+
+        float ik = Crouching ? 0.5f : 0.45f;
+
+        weapons.weapons[i].WeaponSwap(true);
+        weapons.weapons[i].gameObject.SetActive(true);
+
+        handIK.leftHandObj = weapons.weapons[i].Grip;
+        handIK.rightHandObj = weapons.weapons[i].Trigger;
+        handIK.LeftIK = ik;
+        if (PhotonNetwork.IsConnected)
+        {
+            photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, ik);
+        }
+
+        currWeapon = i;
+
+        WeaponMultiplier = WeaponClassModifiers[weapons.weapons[i].weaponClass];
+
+        if (PhotonNetwork.IsConnected)
+            GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, i);
+
+        Swapping = false;
     }
 
     void Crouch(bool crouched)
@@ -730,6 +933,24 @@ public class PlayerController : MonoBehaviour
             if(!playerReload)
             {
                 handIK.LeftIK = 0.5f;
+                if (PhotonNetwork.IsConnected)
+                {
+                    photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, 0.5f);
+                }
+            }
+
+            step *= 1.75f;
+
+            foreach (WeaponController weapon in weapons.weapons)
+            {
+                if(moving)
+                {
+                    weapon.UpdateHipfireSpread(0.7f, 0.7f);
+                }
+                else
+                {
+                    weapon.UpdateHipfireSpread(0.45f, 0.45f);
+                }
             }
         }
         else
@@ -743,78 +964,197 @@ public class PlayerController : MonoBehaviour
             if (!playerReload)
             {
                 handIK.LeftIK = 0.45f;
+                if(PhotonNetwork.IsConnected)
+                {
+                    photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, 0.45f);
+                }
+            }
+
+            step = stepss;
+
+            foreach (WeaponController weapon in weapons.weapons)
+            {
+                weapon.UpdateHipfireSpread();
             }
         }
-    }
-
-    public int ChangeHealth(int damage)
-    {
-        Health -= damage;
-
-        if(Health <= 0)
-        {
-            Health = 100;
-
-            if(modeCtrl)
-            {
-                Transform t = modeCtrl.GetRespawn();
-                transform.position = t.position;
-                transform.rotation = t.rotation;
-
-                if (PhotonNetwork.IsConnected)
-                    GetComponent<PhotonView>().RPC("Respawn", RpcTarget.OthersBuffered, t);
-
-            }
-            else
-            {
-                transform.position = new Vector3(0.0f, 40.0f, 0.0f);
-            }
-            return 0;
-        }
-
-        return Health;
     }
 
     [PunRPC]
-    public int ChangeHealthRPC(int damage)
+    void UpdateLeftIK(float val)
     {
+        handIK.LeftIK = val;
+    }
+
+    [PunRPC]
+    void PlayWalkingRPC()
+    {
+        float vol = 0.5f;
+        if (!photonView.IsMine)
+        {
+            vol = 0.3f;
+        }
+        audioSource.PlayOneShot(WalkingSFX, vol); // 283ms
+    }
+
+    [PunRPC]
+    public void ChangeHealthRPC(int damage, Vector3 dir, int enemyID)
+    {
+        if(dead)
+        {
+            return;
+        }
+
         Debug.Log("Damaged: " + damage + " | Health: " + (Health - damage));
         Health -= damage;
 
-        if (Health <= 0)
+        if (photonView.IsMine)
         {
-            Health = 100;
-
             if (modeCtrl)
             {
-                Transform t = modeCtrl.GetRespawn();
-                transform.position = t.position;
-                transform.rotation = t.rotation;
-
-                if (PhotonNetwork.IsConnected)
-                    GetComponent<PhotonView>().RPC("Respawn", RpcTarget.OthersBuffered, t);
-
+                HealthBar.size = Health / (float)modeCtrl.MaxHealth;
             }
             else
             {
-                transform.position = new Vector3(0.0f, 40.0f, 0.0f);
+                HealthBar.size = Health / 100.0f;
             }
-            return 0;
+
+            if (Health < 30.0f)
+            {
+                HealthBarStatus.color = Color.red;
+            }
+            else
+            {
+                HealthBarStatus.color = Color.green;
+            }
+
+            //StartCoroutine(DamageIndicator(Vector3.Angle(transform.forward, dir)));
+            StartCoroutine(DamageIndicator(Vector3.SignedAngle(transform.forward, dir, Vector3.up)));
         }
 
-        if(photonView.IsMine)
+        if (damage > 0)
         {
-            DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
+            if (photonView.IsMine)
+            {
+                if (modeCtrl)
+                {
+                    Damaged = modeCtrl.Regen;
+                    healthTimer = -modeCtrl.RegenTimeReset;
+                }
+                else
+                {
+                    Damaged = true;
+                    healthTimer = -2.0f;
+                }
+            }
+
+            if (Health <= 0)
+            {
+                lowHealth = false;
+                dead = true;
+
+                audioSource.Stop();
+                if (photonView.IsMine)
+                    audioSource.PlayOneShot(HitDeadSFX);
+
+                if (modeCtrl)
+                {
+                    if (photonView.IsMine)
+                        Health = modeCtrl.MaxHealth;
+
+                    //photonView.ViewID
+                    if(PhotonNetwork.IsConnected)
+                        modeCtrl.GetComponent<PhotonView>().RPC("PlayerDied", RpcTarget.All, photonView.ViewID, enemyID);
+
+                    /*Transform t = modeCtrl.GetRespawn();
+                    transform.position = t.position;
+                    transform.rotation = t.rotation;
+
+                    if (PhotonNetwork.IsConnected)
+                        GetComponent<PhotonView>().RPC("Respawn", RpcTarget.OthersBuffered, t.position, t.rotation);
+                    */
+                }
+                else
+                {
+                    Debug.Log("No Mode CTRL");
+
+                    Health = 100;
+                    transform.position = new Vector3(0.0f, 40.0f, 0.0f);
+                }
+                return;
+            }
+
+            if (photonView.IsMine)
+            {
+                DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
+
+                audioSource.PlayOneShot(HitSFX);
+
+                if (!lowHealth && Health <= 30.0f)
+                {
+                    audioSource.PlayOneShot(LowHealthSFX);
+                    lowHealth = true;
+                }
+            }
+        }
+        else
+        {
+            if (modeCtrl)
+            {
+                if (Health >= modeCtrl.MaxHealth)
+                {
+                    Health = modeCtrl.MaxHealth;
+
+                    Damaged = false;
+                    lowHealth = false;
+                }
+            }
+            else
+            {
+                if (Health >= 100)
+                {
+                    Health = 100;
+
+                    Damaged = false;
+                    lowHealth = false;
+                }
+            }
+            if (photonView.IsMine)
+                DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
         }
 
-        return Health;
+        return;
+    }
+
+    IEnumerator DamageIndicator(float angle)
+    {
+        angle = Mathf.Round(angle / 45.0f) * 45.0f;
+
+        float absAngle = Mathf.Abs(angle);
+        if (absAngle == 0.0f || absAngle == 180.0f)
+        {
+
+        }
+        else
+        {
+            angle *= -1.0f;
+        }
+
+        damageIndicator.SetActive(true);
+
+        damageIndicator.transform.eulerAngles = new Vector3(0.0f, 0.0f, angle);
+
+        yield return new WaitForSeconds(0.5f);
+
+        damageIndicator.SetActive(false);
     }
 
     [PunRPC]
-    private void Respawn(Transform t)
+    private void Respawn(Vector3 pos, Quaternion rot)
     {
-        transform.position = t.position;
-        transform.rotation = t.rotation;
+        transform.position = pos;
+        transform.rotation = rot;
+
+        dead = false;
         /*if (gameCtrl)
         {
             transform.position = gameCtrl.spawnPoints[index].position;
@@ -828,6 +1168,18 @@ public class PlayerController : MonoBehaviour
     }
 
     [PunRPC]
+    private void PreWeaponSwap()
+    {
+        handIK.leftHandObj = transform;
+        handIK.rightHandObj = transform;
+
+        foreach (WeaponController weapon in weapons.weapons)
+        {
+            weapon.gameObject.SetActive(false);
+        }
+    }
+
+    [PunRPC]
     private void WeaponSwap(int currWeapon)
     {
         foreach(WeaponController weapon in weapons.weapons)
@@ -835,6 +1187,9 @@ public class PlayerController : MonoBehaviour
             weapon.gameObject.SetActive(false);
         }
         weapons.weapons[currWeapon].gameObject.SetActive(true);
+
+        handIK.leftHandObj = weapons.weapons[currWeapon].Grip;
+        handIK.rightHandObj = weapons.weapons[currWeapon].Trigger;
     }
 
     public void UpdateKeybinds(Dictionary<KeyActions, KeyCode> keybinds)

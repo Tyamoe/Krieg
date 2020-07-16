@@ -6,6 +6,14 @@ public class Game : MonoBehaviour
 {
     public bool Networked;
 
+    [Space]
+    public AudioClip ButtonHighSFX;
+    public AudioClip ButtonLowSFX;
+
+    private static AudioSource audioSource;
+    private static AudioClip buttonHighSFX;
+    private static AudioClip buttonLowSFX;
+
     private static Game _instance;
 
     public static Game Instance
@@ -26,6 +34,20 @@ public class Game : MonoBehaviour
 
         PhotonNetwork.SendRate = 64;
         PhotonNetwork.SerializationRate = 64;
+
+        audioSource = GetComponent<AudioSource>();
+
+        buttonHighSFX = ButtonHighSFX;
+        buttonLowSFX = ButtonLowSFX;
+    }
+
+    public static void PlayHigh(float vol = 0.2f)
+    {
+        audioSource.PlayOneShot(buttonHighSFX, vol);
+    }
+    public static void PlayLow(float vol = 0.2f)
+    {
+        audioSource.PlayOneShot(buttonHighSFX, vol);
     }
 
     void Start()
