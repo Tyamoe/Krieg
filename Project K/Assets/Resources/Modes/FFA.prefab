@@ -46,6 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modeName: FFA
   Teams: 0
+  TeamCount: 0
   Respawn: 1
   TeamSpawn: 0
   RespawnTimer: 3
@@ -56,7 +57,9 @@ MonoBehaviour:
   RegenTime: 1.5
   RegenTimeReset: 2
   RegenAmount: 15
-  players: []
+  player: {fileID: 0}
+  playerCount: 1
+  tempIdList: 
 --- !u!114 &3905715073305217108
 MonoBehaviour:
   m_ObjectHideFlags: 0

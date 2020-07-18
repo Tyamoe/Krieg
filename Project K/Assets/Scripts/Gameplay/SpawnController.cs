@@ -16,24 +16,32 @@ public class SpawnController : MonoBehaviour
 {
     Dictionary<int, PlayerController> NearbyEnemies = new Dictionary<int, PlayerController>();
 
-    void OnCollisionEnter(Collision collider)
-    {
-        if(collider.gameObject.name.Contains("Player"))
-        {
-            PlayerController player = collider.gameObject.GetComponent<PlayerController>();
+    public PlayerController pp;
 
-            // If Enemy
-            NearbyEnemies.Add(player.photonView.ViewID, player);
-        }
-    }
-
-    void OnCollisionExit(Collision collider)
+    void OnTriggerEnter(Collider collider)
     {
+        //Debug.Log("SpawnController");
         if (collider.gameObject.name.Contains("Player"))
         {
             PlayerController player = collider.gameObject.GetComponent<PlayerController>();
 
-            if(NearbyEnemies.ContainsKey(player.photonView.ViewID))
+            pp = player;
+
+            // If Enemy
+            NearbyEnemies[player.photonView.ViewID] = player;
+        }
+    }
+
+    void OnTriggerExit(Collider collider)
+    {
+        //Debug.Log("SpawnControllere");
+        if (collider.gameObject.name.Contains("Player"))
+        {
+            PlayerController player = collider.gameObject.GetComponent<PlayerController>();
+
+            pp = player;
+
+            if (NearbyEnemies.ContainsKey(player.photonView.ViewID))
                 NearbyEnemies.Remove(player.photonView.ViewID);
         }
     }

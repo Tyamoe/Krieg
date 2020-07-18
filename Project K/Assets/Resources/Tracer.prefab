@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3229561767868417176}
   - component: {fileID: 3510490388949217628}
   - component: {fileID: 1321446814735032345}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Tracer
   m_TagString: Self
   m_Icon: {fileID: 0}

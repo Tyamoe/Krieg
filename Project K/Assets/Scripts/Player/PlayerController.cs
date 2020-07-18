@@ -8,6 +8,8 @@ public class PlayerController : MonoBehaviour
 {
     public PhotonView photonView;
 
+    public string playerName = "";
+
     [Header("Movement")]
     public float PlayerSpeed = 20.0f;
     public float PlayerSprintSpeed = 4.0f;
@@ -28,8 +30,10 @@ public class PlayerController : MonoBehaviour
     public WeaponManager weapons;
     public PlayerSettingsFunctions settingsFuncs;
 
-    //[HideInInspector]
+    [HideInInspector]
     public ModeController modeCtrl;
+    [HideInInspector]
+    public MapController mapCtrl;
 
     [Header("Object References")]
     public Camera FPSCamera;
@@ -43,8 +47,8 @@ public class PlayerController : MonoBehaviour
 
     public Dictionary<WeaponClass, float> WeaponClassModifiers = new Dictionary<WeaponClass, float>()
     {
-        { WeaponClass.Knife, 1.15f },
-        { WeaponClass.Pistol, 1.0f },
+        { WeaponClass.Knife, 1.2f },
+        { WeaponClass.Pistol, 1.05f },
         { WeaponClass.SMG, 0.98f },
         { WeaponClass.Shotgun, 0.95f },
         { WeaponClass.Rifle, 0.94f },
@@ -69,13 +73,13 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private bool toggleADS_;
+    private bool toggleADS_ = false;
     public bool toggleADS
     {
         get { return toggleADS_; }
         set
         {
-            if (toggleADS_ == value) return;
+            //if (toggleADS_ == value) return;
 
             toggleADS_ = value;
             if (!Started)
@@ -234,6 +238,8 @@ public class PlayerController : MonoBehaviour
     public GameObject Hitmarker;
 
     [HideInInspector]
+    public MatchFeedController feedCtrl;
+    [HideInInspector]
     public TMPro.TextMeshProUGUI AmmoText;
     [HideInInspector]
     public TMPro.TextMeshProUGUI DebugText;
@@ -245,6 +251,11 @@ public class PlayerController : MonoBehaviour
 
     [HideInInspector]
     public HandIK handIK;
+
+    // Minimap
+    private RectTransform minimapCtrl;
+    private RectTransform minimapMeCtrl;
+    private float minimapTimer = 1.0f;
 
     // Health
     private bool Damaged = false;
@@ -275,15 +286,17 @@ public class PlayerController : MonoBehaviour
                 {
                     foreach (WeaponController weapon in weapons.weapons)
                     {
-                        weapon.UpdateHipfireSpread(0.7f, 0.7f);
+                        weapon.UpdateHipfireSpread(0.7f, 0.7f, false);
                     }
+                    weapons.weapons[currWeapon].UpdateHipfireSpread(0.7f, 0.7f);
                 }
                 else
                 {
                     foreach (WeaponController weapon in weapons.weapons)
                     {
-                        weapon.UpdateHipfireSpread(1.45f, 1.45f);
+                        weapon.UpdateHipfireSpread(1.45f, 1.45f, false);
                     }
+                    weapons.weapons[currWeapon].UpdateHipfireSpread(1.45f, 1.45f);
                 }
             }
             else
@@ -292,15 +305,17 @@ public class PlayerController : MonoBehaviour
                 {
                     foreach (WeaponController weapon in weapons.weapons)
                     {
-                        weapon.UpdateHipfireSpread(0.45f, 0.45f);
+                        weapon.UpdateHipfireSpread(0.45f, 0.45f, false);
                     }
+                    weapons.weapons[currWeapon].UpdateHipfireSpread(0.45f, 0.45f);
                 }
                 else
                 {
                     foreach (WeaponController weapon in weapons.weapons)
                     {
-                        weapon.UpdateHipfireSpread();
+                        weapon.UpdateHipfireSpread(1.0f, 1.0f, false);
                     }
+                    weapons.weapons[currWeapon].UpdateHipfireSpread();
                 }
             }
         }
@@ -367,6 +382,9 @@ public class PlayerController : MonoBehaviour
         player = GetComponent<CharacterController>();
         handIK = GetComponent<HandIK>();
 
+        //player.detectCollisions = false;
+        Physics.IgnoreLayerCollision(8, 13);
+
         if (!photonView.IsMine && PhotonNetwork.IsConnected)
         {
             FPSCamera.enabled = false;
@@ -399,11 +417,14 @@ public class PlayerController : MonoBehaviour
             FPSCamera.GetComponent<AudioListener>().enabled = true;
         }
 
+        playerName = PhotonNetwork.NickName.Split('#')[0];
+
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
         InGameUI = PlayerUI.transform.Find("InGame").gameObject;
         SettingsUI = PlayerUI.transform.Find("Settings").gameObject;
+        SettingsUI.SetActive(true);
 
         damageIndicator = InGameUI.transform.Find("DamageIndicator").gameObject;
         damageIndicator.SetActive(false);
@@ -411,6 +432,10 @@ public class PlayerController : MonoBehaviour
         Crosshair = InGameUI.transform.Find("Crosshair").gameObject;
         AmmoText = InGameUI.transform.Find("Ammo").Find("AmmoText").gameObject.GetComponent<TMPro.TextMeshProUGUI>();
         DebugText = InGameUI.transform.Find("Debug").gameObject.GetComponent<TMPro.TextMeshProUGUI>();
+        feedCtrl = InGameUI.transform.Find("Feed").gameObject.GetComponentInChildren<MatchFeedController>();
+
+        minimapCtrl = InGameUI.transform.Find("Minimap").Find("MinimapImage").GetComponent<RectTransform>();
+        minimapMeCtrl = InGameUI.transform.Find("Minimap").Find("Me").GetComponent<RectTransform>();
 
         HealthBar = InGameUI.transform.Find("HealthBar").GetComponent<Scrollbar>();
         HealthBarStatus = HealthBar.transform.Find("Sliding Area").Find("HealthBarStatus").GetComponent<Image>();
@@ -468,6 +493,34 @@ public class PlayerController : MonoBehaviour
 
             PlayerControl = !SettingsOpen;
         }
+
+        // Minimap
+        //if (minimapTimer > 0.10f)
+        {
+            // Position
+            Vector2 mpos = mapCtrl.GetMinimapPos(transform.position);
+            minimapCtrl.localPosition = new Vector3(mpos.x, mpos.y, 0.0f) * minimapCtrl.localScale.x;
+
+            // Rotation
+            float ang = Vector3.SignedAngle(Vector3.forward, transform.forward, Vector3.up);
+            ang = Mathf.Round(ang / 15.0f) * 15.0f;
+
+            float absAngle = Mathf.Abs(ang);
+            if (absAngle == 0.0f || absAngle == 180.0f)
+            {
+
+            }
+            else
+            {
+                ang *= -1.0f;
+            }
+
+            minimapMeCtrl.localEulerAngles = new Vector3(0.0f, 0.0f, ang);
+
+            minimapTimer = 0.0f;
+        }
+
+        minimapTimer += Time.deltaTime;
 
         // Gravity
         PlayerVelocity += (PlayerGravity * WeaponMultiplier) * Time.deltaTime;
@@ -705,6 +758,14 @@ public class PlayerController : MonoBehaviour
 
             StartCoroutine(SwitchWeapon(1));
         }
+        if (Input.GetKeyDown(KeyCode.Alpha3) && !playerReload && !Swapping && currWeapon != 2)
+        {
+            weapons.weapons[currWeapon].WeaponSwap(false);
+            weapons.weapons[currWeapon].gameObject.SetActive(false);
+
+            StartCoroutine(SwitchWeapon(2));
+
+        }
 
         if (Input.GetKeyDown(Keybinds[KeyActions.SwapDown]) && !Swapping)
         {
@@ -768,7 +829,7 @@ public class PlayerController : MonoBehaviour
                 {
                     healthTimer = 0.0f;
                     if (PhotonNetwork.IsConnected)
-                        photonView.RPC("ChangeHealthRPC", RpcTarget.AllBuffered, -15);
+                        photonView.RPC("ChangeHealthRPC", RpcTarget.AllBuffered, -15, Vector3.zero, -1, -1);
                 }
             }
             else
@@ -778,7 +839,7 @@ public class PlayerController : MonoBehaviour
                 {
                     healthTimer = 0.0f;
                     if (PhotonNetwork.IsConnected)
-                        photonView.RPC("ChangeHealthRPC", RpcTarget.AllBuffered, -modeCtrl.RegenAmount);
+                        photonView.RPC("ChangeHealthRPC", RpcTarget.AllBuffered, -modeCtrl.RegenAmount, Vector3.zero, -1, -1);
                 }
             }
         }
@@ -876,7 +937,7 @@ public class PlayerController : MonoBehaviour
 
     bool isGrounded()
     {
-        return player.isGrounded || PlayerVelocity.y > -0.050f && PlayerVelocity.y <= 0.0f;
+        return player.isGrounded || PlayerVelocity.y > -0.10f && PlayerVelocity.y <= 0.0f;
     }
 
     IEnumerator SwitchWeapon(int i)
@@ -941,17 +1002,19 @@ public class PlayerController : MonoBehaviour
 
             step *= 1.75f;
 
+            float mod = moving ? 0.7f : 0.45f;
             foreach (WeaponController weapon in weapons.weapons)
             {
                 if(moving)
                 {
-                    weapon.UpdateHipfireSpread(0.7f, 0.7f);
+                    weapon.UpdateHipfireSpread(mod, mod, false);
                 }
                 else
                 {
-                    weapon.UpdateHipfireSpread(0.45f, 0.45f);
+                    weapon.UpdateHipfireSpread(mod, mod, false);
                 }
             }
+            weapons.weapons[currWeapon].UpdateHipfireSpread(mod, mod);
         }
         else
         {
@@ -959,7 +1022,7 @@ public class PlayerController : MonoBehaviour
             playerAnim.SetBool("Crouching", false);
 
             player.height = 8.0f;
-            player.center = new Vector3(player.center.x, 4.0f, player.center.z);
+            player.center = new Vector3(player.center.x, 4.1f, player.center.z);
 
             if (!playerReload)
             {
@@ -974,8 +1037,9 @@ public class PlayerController : MonoBehaviour
 
             foreach (WeaponController weapon in weapons.weapons)
             {
-                weapon.UpdateHipfireSpread();
+                weapon.UpdateHipfireSpread(1.0f, 1.0f, false);
             }
+            weapons.weapons[currWeapon].UpdateHipfireSpread();
         }
     }
 
@@ -997,81 +1061,71 @@ public class PlayerController : MonoBehaviour
     }
 
     [PunRPC]
-    public void ChangeHealthRPC(int damage, Vector3 dir, int enemyID)
+    public void ChangeHealthRPC(int damage, Vector3 dir, int enemyID, int victimID)
     {
         if(dead)
         {
             return;
         }
 
-        Debug.Log("Damaged: " + damage + " | Health: " + (Health - damage));
+        Debug.Log("Damaged: " + damage + " | Health: " + (Health - damage) + " " + dead.ToString());
         Health -= damage;
 
-        if (photonView.IsMine)
+        if (!photonView.IsMine)
         {
-            if (modeCtrl)
-            {
-                HealthBar.size = Health / (float)modeCtrl.MaxHealth;
-            }
-            else
-            {
-                HealthBar.size = Health / 100.0f;
-            }
+            return;
+        }
 
-            if (Health < 30.0f)
-            {
-                HealthBarStatus.color = Color.red;
-            }
-            else
-            {
-                HealthBarStatus.color = Color.green;
-            }
+        if (modeCtrl)
+        {
+            HealthBar.size = Health / (float)modeCtrl.MaxHealth;
+        }
+        else
+        {
+            HealthBar.size = Health / 100.0f;
+        }
 
-            //StartCoroutine(DamageIndicator(Vector3.Angle(transform.forward, dir)));
-            StartCoroutine(DamageIndicator(Vector3.SignedAngle(transform.forward, dir, Vector3.up)));
+        if (Health < 30.0f)
+        {
+            HealthBarStatus.color = Color.red;
+        }
+        else
+        {
+            HealthBarStatus.color = Color.green;
         }
 
         if (damage > 0)
         {
-            if (photonView.IsMine)
+            if (modeCtrl)
             {
-                if (modeCtrl)
-                {
-                    Damaged = modeCtrl.Regen;
-                    healthTimer = -modeCtrl.RegenTimeReset;
-                }
-                else
-                {
-                    Damaged = true;
-                    healthTimer = -2.0f;
-                }
+                Damaged = modeCtrl.Regen;
+                healthTimer = -modeCtrl.RegenTimeReset;
             }
+            else
+            {
+                Damaged = true;
+                healthTimer = -2.0f;
+            }
+            
+            StartCoroutine(DamageIndicator(Vector3.SignedAngle(transform.forward, dir, Vector3.up)));
 
             if (Health <= 0)
             {
                 lowHealth = false;
                 dead = true;
+                Damaged = false;
+
+                PlayerLocked = true;
 
                 audioSource.Stop();
-                if (photonView.IsMine)
-                    audioSource.PlayOneShot(HitDeadSFX);
+                audioSource.PlayOneShot(HitDeadSFX);
 
                 if (modeCtrl)
                 {
-                    if (photonView.IsMine)
-                        Health = modeCtrl.MaxHealth;
+                    Health = modeCtrl.MaxHealth;
 
-                    //photonView.ViewID
-                    if(PhotonNetwork.IsConnected)
-                        modeCtrl.GetComponent<PhotonView>().RPC("PlayerDied", RpcTarget.All, photonView.ViewID, enemyID);
+                    modeCtrl.GetComponent<PhotonView>().RPC("PlayerDied", RpcTarget.All, photonView.ViewID, enemyID);
 
-                    /*Transform t = modeCtrl.GetRespawn();
-                    transform.position = t.position;
-                    transform.rotation = t.rotation;
-
-                    if (PhotonNetwork.IsConnected)
-                        GetComponent<PhotonView>().RPC("Respawn", RpcTarget.OthersBuffered, t.position, t.rotation);
-                    */
                 }
                 else
                 {
@@ -1083,17 +1137,14 @@ public class PlayerController : MonoBehaviour
                 return;
             }
 
-            if (photonView.IsMine)
+            DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
+
+            audioSource.PlayOneShot(HitSFX);
+
+            if (!lowHealth && Health <= 30.0f)
             {
-                DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
-
-                audioSource.PlayOneShot(HitSFX);
-
-                if (!lowHealth && Health <= 30.0f)
-                {
-                    audioSource.PlayOneShot(LowHealthSFX);
-                    lowHealth = true;
-                }
+                audioSource.PlayOneShot(LowHealthSFX);
+                lowHealth = true;
             }
         }
         else
@@ -1118,8 +1169,8 @@ public class PlayerController : MonoBehaviour
                     lowHealth = false;
                 }
             }
-            if (photonView.IsMine)
-                DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
+
+            DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
         }
 
         return;
@@ -1151,20 +1202,13 @@ public class PlayerController : MonoBehaviour
     [PunRPC]
     private void Respawn(Vector3 pos, Quaternion rot)
     {
+        Debug.Log("Resoawn: " + photonView.ViewID + " | " + pos.ToString());
         transform.position = pos;
         transform.rotation = rot;
 
         dead = false;
-        /*if (gameCtrl)
-        {
-            transform.position = gameCtrl.spawnPoints[index].position;
-            transform.rotation = Quaternion.identity;
-        }
-        else
-        {
-            transform.position = new Vector3(0.0f, 40.0f, 0.0f);
-            transform.rotation = Quaternion.identity;
-        }*/
+
+        PlayerLocked = false;
     }
 
     [PunRPC]

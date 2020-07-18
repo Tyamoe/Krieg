@@ -28,6 +28,9 @@ public class WeaponController : MonoBehaviour
     public int Damage = 25;
 
     [Space]
+    public LayerMask IgnoreMask;
+
+    [Space]
     [Tooltip("Time between shots")]
     public float ShotDelay = 0.0f;
 
@@ -206,7 +209,7 @@ public class WeaponController : MonoBehaviour
             if (Started)
             {
                 UpdateWeaponUI();
-                UpdateHipfireSpread();
+                UpdateHipfireSpread(true);
 
                 if (player.playerADS)
                 {
@@ -594,14 +597,21 @@ public class WeaponController : MonoBehaviour
 
                 //RaycastHit[] hits = Physics.RaycastAll(player.FPSCamera.transform.position, dir, 1000.0f);
                 RaycastHit hit;
-                if (Physics.Linecast(player.FPSCamera.transform.position, target, out hit))
+                //if (Physics.Linecast(player.FPSCamera.transform.position, target, out hit))
+                if (Physics.Raycast(player.FPSCamera.transform.position, dir, out hit, 1000.0f, ~IgnoreMask))
                 {
-                    //
-                    Debug.DrawLine(player.FPSCamera.transform.position, hit.point, Color.red, 0.66f);
-                    if (PhotonNetwork.IsConnected)
-                        GetComponent<PhotonView>().RPC("DebugLineRPC", RpcTarget.Others, player.FPSCamera.transform.position, hit.point);
+                    PlayerController enemy = null;
 
-                    PlayerController enemy = hit.transform.gameObject.GetComponent<PlayerController>();
+                    enemy = hit.transform.gameObject.GetComponent<PlayerController>();
+                    if(!enemy)
+                    {
+                        PlayerCollider enemyCol = hit.transform.gameObject.GetComponent<PlayerCollider>();
+                        if(enemyCol)
+                        {
+                            enemy = enemyCol.player;
+                        }
+                    }
+
                     if (enemy && enemy != player)
                     {
                         Color c = Color.green;
@@ -618,7 +628,7 @@ public class WeaponController : MonoBehaviour
                         audioSource.PlayOneShot(FireHitSFX);
 
                         if (PhotonNetwork.IsConnected)
-                            enemy.gameObject.GetPhotonView().RPC("ChangeHealthRPC", RpcTarget.All, Damage, player.FPSCamera.transform.forward, player.photonView.ViewID);
+                            enemy.gameObject.GetPhotonView().RPC("ChangeHealthRPC", RpcTarget.All, Damage, player.FPSCamera.transform.forward, player.photonView.ViewID, enemy.photonView.ViewID);
 
                         IEnumerator coroutine;
                         coroutine = ShowHitmarker(0.45f, c);
@@ -649,10 +659,6 @@ public class WeaponController : MonoBehaviour
                 }
                 else
                 {
-                    Debug.DrawLine(player.FPSCamera.transform.position, target, Color.green, 0.66f);
-                    if (PhotonNetwork.IsConnected)
-                        GetComponent<PhotonView>().RPC("DebugLineRPC", RpcTarget.Others, player.FPSCamera.transform.position, target);
-
                     audioSource.PlayOneShot(FireSFX);
                 }
 
@@ -817,15 +823,28 @@ public class WeaponController : MonoBehaviour
         return (val - r1s) / (r1e - r1s) * (r2e - r2s) + r2s;
     }
 
-    public void UpdateHipfireSpread(float x = 1.0f, float y = 1.0f)
+    public void UpdateHipfireSpread(float x = 1.0f, float y = 1.0f, bool scale = true)
     {
         hipfireSpreadX = HipfireSpreadX * x;
         hipfireSpreadY = HipfireSpreadY * y;
 
-        float sx = mapToRange(hipfireSpreadX, 0.0f, 1.0f, 0.8f, 1.8f);
-        float sy = mapToRange(hipfireSpreadY, 0.0f, 1.0f, 0.8f, 1.8f);
+        if(scale)
+        {
+            float sx = mapToRange(hipfireSpreadX, 0.0f, 1.0f, 0.8f, 1.8f);
+            float sy = mapToRange(hipfireSpreadY, 0.0f, 1.0f, 0.8f, 1.8f);
 
-        Crosshair.GetComponent<RectTransform>().localScale = new Vector3(sx, sy, 1.0f);
+            Crosshair.GetComponent<RectTransform>().localScale = new Vector3(sx, sy, 1.0f);
+        }
+    }
+    public void UpdateHipfireSpread(bool scale)
+    {
+        if (scale)
+        {
+            float sx = mapToRange(hipfireSpreadX, 0.0f, 1.0f, 0.8f, 1.8f);
+            float sy = mapToRange(hipfireSpreadY, 0.0f, 1.0f, 0.8f, 1.8f);
+
+            Crosshair.GetComponent<RectTransform>().localScale = new Vector3(sx, sy, 1.0f);
+        }
     }
 
     public void UpdateWeaponUI()
@@ -851,12 +870,6 @@ public class WeaponController : MonoBehaviour
     {
         GameObject f = Instantiate(TracerPrefab, BulletSpawn.position, BulletSpawn.rotation);
         f.GetComponent<Tracer>().direction = diri;
-    }
-
-    [PunRPC]
-    private void DebugLineRPC(Vector3 s, Vector3 e)
-    {
-        Debug.DrawLine(s, e, Color.red, 0.66f);
     }
 
     [PunRPC]

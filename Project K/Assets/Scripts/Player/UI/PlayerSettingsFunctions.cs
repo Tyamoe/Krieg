@@ -189,14 +189,18 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
 
     void Awake()
     {
+        RenderSettings.ambientLight = new Color(0.4f, 0.4f, 0.4f, 1.0f);
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+
         settings = new Settings();
+
+        Started = false;
+        LoadSaved();
+        GameplayTab();
     }
 
     void Start()
     {
-        Started = false;
-        LoadSaved();
-        GameplayTab();
         Started = true;
     }
 
@@ -270,14 +274,14 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
         tmp.text = prev;
     }
 
-    private void OnDisable()
+    public override void OnDisable()
     {
         Started = false;
         LoadSaved();
         Started = true;
     }
 
-    private void OnEnable()
+    public override void OnEnable()
     {
         Vector3 v = GameplayTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
         GameplayTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
@@ -291,22 +295,22 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
         v = PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position;
         PerformanceTabPanel.transform.Find("Viewport").Find("Content").GetComponent<RectTransform>().position = new Vector3(v.x, 0.0f, v.z);
 
-        GameplayTab();
+        //GameplayTab();
     }
 
     void LoadSaved()
     {
         // Gameplay
-        settings.fov = PlayerPrefs.GetFloat("fov", 75);
-        settings.brightness = PlayerPrefs.GetFloat("brightness", 70);
+        settings.fov = PlayerPrefs.GetFloat(Game.ID + "fov", 75);
+        settings.brightness = PlayerPrefs.GetFloat(Game.ID + "brightness", 70);
 
-        settings.SensitivityX = PlayerPrefs.GetFloat("SensitivityX", 1.0f);
-        settings.SensitivityY = PlayerPrefs.GetFloat("SensitivityY", 1.0f);
-        settings.ADSMultiplierX = PlayerPrefs.GetFloat("ADSMultiplierX", 1.0f);
-        settings.ADSMultiplierY = PlayerPrefs.GetFloat("ADSMultiplierY", 1.0f);
+        settings.SensitivityX = PlayerPrefs.GetFloat(Game.ID + "SensitivityX", 1.0f);
+        settings.SensitivityY = PlayerPrefs.GetFloat(Game.ID + "SensitivityY", 1.0f);
+        settings.ADSMultiplierX = PlayerPrefs.GetFloat(Game.ID + "ADSMultiplierX", 1.0f);
+        settings.ADSMultiplierY = PlayerPrefs.GetFloat(Game.ID + "ADSMultiplierY", 1.0f);
 
-        settings.toggleADS = PlayerPrefs.GetInt("toggleADS", 0) == 0 ? false : true;
-        settings.toggleCrouch = PlayerPrefs.GetInt("toggleCrouch", 0) == 0 ? false : true;
+        settings.toggleADS = PlayerPrefs.GetInt(Game.ID + "toggleADS", 0) == 0 ? false : true;
+        settings.toggleCrouch = PlayerPrefs.GetInt(Game.ID + "toggleCrouch", 0) == 0 ? false : true;
 
         // Set UI Elements
         FovSlider.value = settings.fov;
@@ -318,6 +322,11 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
         MultiYSlider.value = settings.ADSMultiplierY;
 
         ADSToggle.isOn = settings.toggleADS;
+        if (player)
+        {
+            player.toggleADS = settings.toggleADS;
+        }
+
         CrouchToggle.isOn = settings.toggleCrouch;
 
         //-----------------------------------------------------------------//
@@ -325,28 +334,28 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
         //-----------------------------------------------------------------//
 
         // Keybind
-        Keybinds[KeyActions.Forward] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Forward", (int)Keybinds[KeyActions.Forward]);
-        Keybinds[KeyActions.Back] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Back", (int)Keybinds[KeyActions.Back]);
-        Keybinds[KeyActions.Left] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Left", (int)Keybinds[KeyActions.Left]);
-        Keybinds[KeyActions.Right] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Right", (int)Keybinds[KeyActions.Right]);
+        Keybinds[KeyActions.Forward] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Forward", (int)Keybinds[KeyActions.Forward]);
+        Keybinds[KeyActions.Back] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Back", (int)Keybinds[KeyActions.Back]);
+        Keybinds[KeyActions.Left] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Left", (int)Keybinds[KeyActions.Left]);
+        Keybinds[KeyActions.Right] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Right", (int)Keybinds[KeyActions.Right]);
 
-        Keybinds[KeyActions.Sprint] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Sprint", (int)Keybinds[KeyActions.Sprint]);
-        Keybinds[KeyActions.Jump] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Jump", (int)Keybinds[KeyActions.Jump]);
-        Keybinds[KeyActions.Crouch] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Crouch", (int)Keybinds[KeyActions.Crouch]);
+        Keybinds[KeyActions.Sprint] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Sprint", (int)Keybinds[KeyActions.Sprint]);
+        Keybinds[KeyActions.Jump] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Jump", (int)Keybinds[KeyActions.Jump]);
+        Keybinds[KeyActions.Crouch] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Crouch", (int)Keybinds[KeyActions.Crouch]);
 
-        Keybinds[KeyActions.Reload] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Reload", (int)Keybinds[KeyActions.Reload]);
-        Keybinds[KeyActions.Use] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Use", (int)Keybinds[KeyActions.Use]);
+        Keybinds[KeyActions.Reload] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Reload", (int)Keybinds[KeyActions.Reload]);
+        Keybinds[KeyActions.Use] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Use", (int)Keybinds[KeyActions.Use]);
 
-        Keybinds[KeyActions.Grenade] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Grenade", (int)Keybinds[KeyActions.Grenade]);
+        Keybinds[KeyActions.Grenade] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Grenade", (int)Keybinds[KeyActions.Grenade]);
 
-        Keybinds[KeyActions.ADS] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "ADS", (int)Keybinds[KeyActions.ADS]);
-        Keybinds[KeyActions.Fire] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Fire", (int)Keybinds[KeyActions.Fire]);
+        Keybinds[KeyActions.ADS] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "ADS", (int)Keybinds[KeyActions.ADS]);
+        Keybinds[KeyActions.Fire] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Fire", (int)Keybinds[KeyActions.Fire]);
 
-        Keybinds[KeyActions.SwapDown] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "SwapDown", (int)Keybinds[KeyActions.SwapDown]);
-        Keybinds[KeyActions.SwapUp] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "SwapUp", (int)Keybinds[KeyActions.SwapUp]);
+        Keybinds[KeyActions.SwapDown] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "SwapDown", (int)Keybinds[KeyActions.SwapDown]);
+        Keybinds[KeyActions.SwapUp] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "SwapUp", (int)Keybinds[KeyActions.SwapUp]);
 
-        Keybinds[KeyActions.Menu] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Menu", (int)Keybinds[KeyActions.Menu]);
-        Keybinds[KeyActions.Scoreboard] = (KeyCode)PlayerPrefs.GetInt(PhotonNetwork.NickName + "Scoreboard", (int)Keybinds[KeyActions.Scoreboard]);
+        Keybinds[KeyActions.Menu] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Menu", (int)Keybinds[KeyActions.Menu]);
+        Keybinds[KeyActions.Scoreboard] = (KeyCode)PlayerPrefs.GetInt(Game.ID + "Scoreboard", (int)Keybinds[KeyActions.Scoreboard]);
 
         for(int i = 0; i < System.Enum.GetValues(typeof(KeyActions)).Length; i++)
         {
@@ -360,8 +369,8 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
         //-----------------------------------------------------------------//
 
         // Audio
-        settings.masterVolume = PlayerPrefs.GetFloat("masterVolume", 0.6f);
-        settings.uiVolume = PlayerPrefs.GetFloat("uiVolume", 1.0f);
+        settings.masterVolume = PlayerPrefs.GetFloat(Game.ID + "masterVolume", 0.6f);
+        settings.uiVolume = PlayerPrefs.GetFloat(Game.ID + "uiVolume", 1.0f);
 
         // Set UI Elements
         MasterSlider.value = settings.masterVolume;
@@ -372,21 +381,21 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
         //-----------------------------------------------------------------//
 
         // Performance
-        settings.resolutionScale = PlayerPrefs.GetFloat("resolutionScale", 8.0f);
-        settings.toggleVSync = PlayerPrefs.GetInt("toggleVSync", 1) == 0 ? false : true;
-        settings.renderDistance = PlayerPrefs.GetFloat("renderDistance", 600.0f);
+        settings.resolutionScale = PlayerPrefs.GetFloat(Game.ID + "resolutionScale", 8.0f);
+        settings.toggleVSync = PlayerPrefs.GetInt(Game.ID + "toggleVSync", 1) == 0 ? false : true;
+        settings.renderDistance = PlayerPrefs.GetFloat(Game.ID + "renderDistance", 600.0f);
 
-        settings.modelQuality = PlayerPrefs.GetInt("modelQuality", 1);
-        settings.textureQuality = PlayerPrefs.GetInt("textureQuality", 2);
-        settings.shadows = PlayerPrefs.GetInt("shadows", 1);
-        settings.shadowQuality = PlayerPrefs.GetInt("shadowQuality", 1);
-        settings.MSAA = PlayerPrefs.GetInt("MSAA", 2);
-        settings.anisotropicFiltering = PlayerPrefs.GetInt("anisotropicFiltering", 1);
-        settings.shadowDistance = PlayerPrefs.GetFloat("shadowDistance", 400.0f);
-        settings.shadowCascades = PlayerPrefs.GetInt("shadowCascades", 4);
+        settings.modelQuality = PlayerPrefs.GetInt(Game.ID + "modelQuality", 1);
+        settings.textureQuality = PlayerPrefs.GetInt(Game.ID + "textureQuality", 2);
+        settings.shadows = PlayerPrefs.GetInt(Game.ID + "shadows", 1);
+        settings.shadowQuality = PlayerPrefs.GetInt(Game.ID + "shadowQuality", 1);
+        settings.MSAA = PlayerPrefs.GetInt(Game.ID + "MSAA", 2);
+        settings.anisotropicFiltering = PlayerPrefs.GetInt(Game.ID + "anisotropicFiltering", 1);
+        settings.shadowDistance = PlayerPrefs.GetFloat(Game.ID + "shadowDistance", 400.0f);
+        settings.shadowCascades = PlayerPrefs.GetInt(Game.ID + "shadowCascades", 4);
 
-        settings.ambientOcclusion = PlayerPrefs.GetInt("ambientOcclusion", 0) == 0 ? false : true;
-        settings.DOF = PlayerPrefs.GetInt("DOF", 0) == 0 ? false : true;
+        settings.ambientOcclusion = PlayerPrefs.GetInt(Game.ID + "ambientOcclusion", 0) == 0 ? false : true;
+        settings.DOF = PlayerPrefs.GetInt(Game.ID + "DOF", 0) == 0 ? false : true;
 
         // Set UI Elements
         ResolutionSlider.value = settings.resolutionScale;
@@ -418,61 +427,61 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
     public void SaveSettings()
     {
         // Gameplay
-        PlayerPrefs.SetFloat("fov", settings.fov);
-        PlayerPrefs.SetFloat("brightness", settings.brightness);
+        PlayerPrefs.SetFloat(Game.ID + "fov", settings.fov);
+        PlayerPrefs.SetFloat(Game.ID + "brightness", settings.brightness);
 
-        PlayerPrefs.SetFloat("SensitivityX", settings.SensitivityX);
-        PlayerPrefs.SetFloat("SensitivityY", settings.SensitivityY);
-        PlayerPrefs.SetFloat("ADSMultiplierX", settings.ADSMultiplierX);
-        PlayerPrefs.SetFloat("ADSMultiplierY", settings.ADSMultiplierY);
+        PlayerPrefs.SetFloat(Game.ID + "SensitivityX", settings.SensitivityX);
+        PlayerPrefs.SetFloat(Game.ID + "SensitivityY", settings.SensitivityY);
+        PlayerPrefs.SetFloat(Game.ID + "ADSMultiplierX", settings.ADSMultiplierX);
+        PlayerPrefs.SetFloat(Game.ID + "ADSMultiplierY", settings.ADSMultiplierY);
 
-        PlayerPrefs.SetInt("toggleADS", settings.toggleADS ? 1 : 0);
-        PlayerPrefs.SetInt("toggleCrouch", settings.toggleCrouch ? 1 : 0);
+        PlayerPrefs.SetInt(Game.ID + "toggleADS", settings.toggleADS ? 1 : 0);
+        PlayerPrefs.SetInt(Game.ID + "toggleCrouch", settings.toggleCrouch ? 1 : 0);
 
         // Keybind
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Forward", (int)Keybinds[KeyActions.Forward]);
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Back", (int)Keybinds[KeyActions.Back]);
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Left", (int)Keybinds[KeyActions.Left]);
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Right", (int)Keybinds[KeyActions.Right]);
+        PlayerPrefs.SetInt(Game.ID + "Forward", (int)Keybinds[KeyActions.Forward]);
+        PlayerPrefs.SetInt(Game.ID + "Back", (int)Keybinds[KeyActions.Back]);
+        PlayerPrefs.SetInt(Game.ID + "Left", (int)Keybinds[KeyActions.Left]);
+        PlayerPrefs.SetInt(Game.ID + "Right", (int)Keybinds[KeyActions.Right]);
 
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Sprint", (int)Keybinds[KeyActions.Sprint]);
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Jump", (int)Keybinds[KeyActions.Jump]);
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Crouch", (int)Keybinds[KeyActions.Crouch]);
+        PlayerPrefs.SetInt(Game.ID + "Sprint", (int)Keybinds[KeyActions.Sprint]);
+        PlayerPrefs.SetInt(Game.ID + "Jump", (int)Keybinds[KeyActions.Jump]);
+        PlayerPrefs.SetInt(Game.ID + "Crouch", (int)Keybinds[KeyActions.Crouch]);
 
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Reload", (int)Keybinds[KeyActions.Reload]);
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Use", (int)Keybinds[KeyActions.Use]);
+        PlayerPrefs.SetInt(Game.ID + "Reload", (int)Keybinds[KeyActions.Reload]);
+        PlayerPrefs.SetInt(Game.ID + "Use", (int)Keybinds[KeyActions.Use]);
 
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Grenade", (int)Keybinds[KeyActions.Grenade]);
+        PlayerPrefs.SetInt(Game.ID + "Grenade", (int)Keybinds[KeyActions.Grenade]);
 
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "ADS", (int)Keybinds[KeyActions.ADS]);
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Fire", (int)Keybinds[KeyActions.Fire]);
+        PlayerPrefs.SetInt(Game.ID + "ADS", (int)Keybinds[KeyActions.ADS]);
+        PlayerPrefs.SetInt(Game.ID + "Fire", (int)Keybinds[KeyActions.Fire]);
 
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "SwapDown", (int)Keybinds[KeyActions.SwapDown]);
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "SwapUp", (int)Keybinds[KeyActions.SwapUp]);
+        PlayerPrefs.SetInt(Game.ID + "SwapDown", (int)Keybinds[KeyActions.SwapDown]);
+        PlayerPrefs.SetInt(Game.ID + "SwapUp", (int)Keybinds[KeyActions.SwapUp]);
 
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Menu", (int)Keybinds[KeyActions.Menu]);
-        PlayerPrefs.SetInt(PhotonNetwork.NickName + "Scoreboard", (int)Keybinds[KeyActions.Scoreboard]);
+        PlayerPrefs.SetInt(Game.ID + "Menu", (int)Keybinds[KeyActions.Menu]);
+        PlayerPrefs.SetInt(Game.ID + "Scoreboard", (int)Keybinds[KeyActions.Scoreboard]);
 
         // Audio
-        PlayerPrefs.SetFloat("masterVolume", settings.masterVolume);
-        PlayerPrefs.SetFloat("uiVolume", settings.uiVolume);
+        PlayerPrefs.SetFloat(Game.ID + "masterVolume", settings.masterVolume);
+        PlayerPrefs.SetFloat(Game.ID + "uiVolume", settings.uiVolume);
 
         // Performance
-        PlayerPrefs.SetFloat("resolutionScale", settings.resolutionScale);
-        PlayerPrefs.SetInt("VSync", settings.toggleVSync ? 1 : 0);
-        PlayerPrefs.SetFloat("renderDistance", settings.renderDistance);
+        PlayerPrefs.SetFloat(Game.ID + "resolutionScale", settings.resolutionScale);
+        PlayerPrefs.SetInt(Game.ID + "VSync", settings.toggleVSync ? 1 : 0);
+        PlayerPrefs.SetFloat(Game.ID + "renderDistance", settings.renderDistance);
 
-        PlayerPrefs.SetInt("modelQuality", settings.modelQuality);
-        PlayerPrefs.SetInt("textureQuality", settings.textureQuality);
-        PlayerPrefs.SetInt("shadows", settings.shadows);
-        PlayerPrefs.SetInt("shadowQuality", settings.shadowQuality);
-        PlayerPrefs.SetInt("MSAA", settings.MSAA);
-        PlayerPrefs.SetInt("anisotropicFiltering", settings.anisotropicFiltering);
-        PlayerPrefs.SetFloat("shadowDistance", settings.shadowDistance);
-        PlayerPrefs.SetInt("shadowCascades", settings.shadowCascades);
+        PlayerPrefs.SetInt(Game.ID + "modelQuality", settings.modelQuality);
+        PlayerPrefs.SetInt(Game.ID + "textureQuality", settings.textureQuality);
+        PlayerPrefs.SetInt(Game.ID + "shadows", settings.shadows);
+        PlayerPrefs.SetInt(Game.ID + "shadowQuality", settings.shadowQuality);
+        PlayerPrefs.SetInt(Game.ID + "MSAA", settings.MSAA);
+        PlayerPrefs.SetInt(Game.ID + "anisotropicFiltering", settings.anisotropicFiltering);
+        PlayerPrefs.SetFloat(Game.ID + "shadowDistance", settings.shadowDistance);
+        PlayerPrefs.SetInt(Game.ID + "shadowCascades", settings.shadowCascades);
 
-        PlayerPrefs.SetInt("ambientOcclusion", settings.ambientOcclusion ? 1 : 0);
-        PlayerPrefs.SetInt("DOF", settings.DOF ? 1 : 0);
+        PlayerPrefs.SetInt(Game.ID + "ambientOcclusion", settings.ambientOcclusion ? 1 : 0);
+        PlayerPrefs.SetInt(Game.ID + "DOF", settings.DOF ? 1 : 0);
 
         SaveSettingsButton.GetComponent<Image>().fillCenter = false;
         SaveSettingsButton.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
@@ -501,6 +510,9 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
 
     public void LeaveRoom()
     {
+        //string msg = player.playerName + " Left The Game";
+        //player.modeCtrl.photonView.RPC("SendToFeed", RpcTarget.All, msg);
+
         Debug.Log("LeaveRoom");
         //PhotonNetwork.DestroyPlayerObjects()
         //PhotonNetwork.Destroy(player.gameObject);
@@ -637,7 +649,9 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
     public void UpdateADSTgl(Toggle inBool)
     {
         if (player)
+        { 
             player.toggleADS = inBool.isOn;
+        }
 
         settings.toggleADS = inBool.isOn;
         SettingsChanged();
@@ -645,8 +659,10 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
 
     public void UpdateCrouchTgl(Toggle inBool)
     {
-        if(player)
+        if (player)
+        {
             player.toggleCrouch = inBool.isOn;
+        }
 
         settings.toggleCrouch = inBool.isOn;
         SettingsChanged();

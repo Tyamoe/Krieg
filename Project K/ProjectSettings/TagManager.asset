@@ -30,8 +30,8 @@ TagManager:
   - PlayerViewGun
   - PlayerViewModel
   - PlayerUI
-  - 
-  - 
+  - HitMeNot
+  - Projectile
   - 
   - 
   - 

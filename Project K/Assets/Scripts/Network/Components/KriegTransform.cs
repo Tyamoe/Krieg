@@ -21,13 +21,11 @@ public class KriegTransform : MonoBehaviour, IPunObservable
     {
         if (stream.IsWriting)
         {
-            //We own this player: send the others our data
             stream.SendNext(transform.position);
             stream.SendNext(transform.rotation);
         }
         else
         {
-            //Network player, receive data
             latestPos = (Vector3)stream.ReceiveNext();
             latestRot = (Quaternion)stream.ReceiveNext();
 
@@ -53,8 +51,15 @@ public class KriegTransform : MonoBehaviour, IPunObservable
             double timeToReachGoal = currentPacketTime - lastPacketTime;
             currentTime += Time.deltaTime;
 
-            //Update remote player
-            transform.position = Vector3.Lerp(positionAtLastPacket, latestPos, (float)(currentTime / timeToReachGoal));
+            if(Vector3.Distance(transform.position, latestPos) > 3.0f)
+            {
+                transform.position = latestPos;
+            }
+            else
+            {
+                //Update remote player
+                transform.position = Vector3.Lerp(positionAtLastPacket, latestPos, (float)(currentTime / timeToReachGoal));
+            }
             transform.rotation = Quaternion.Lerp(rotationAtLastPacket, latestRot, (float)(currentTime / timeToReachGoal));
         }
     }

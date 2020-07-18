@@ -121,6 +121,11 @@ public class MatchController : MonoBehaviourPunCallbacks
 
         Mode.GetPhotonView().RPC("Initialize", RpcTarget.AllBuffered);
 
+        if(fillBots)
+        {
+
+        }
+
         voteStartMatchButton.interactable = true;
         voteBotFillButton.interactable = true;
         voteMapChangeButton.interactable = true;

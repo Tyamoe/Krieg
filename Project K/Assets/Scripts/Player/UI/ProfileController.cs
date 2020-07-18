@@ -32,7 +32,7 @@ public class ProfileController : MonoBehaviour
             Destroy(ListingContainer.GetChild(i).gameObject);
         }
 
-        string rawStat = PlayerPrefs.GetString(PhotonNetwork.NickName + "Stats", "0,0:1,0:2,0");
+        string rawStat = PlayerPrefs.GetString(Game.ID + "Stats", "0,0:1,0:2,0");
 
         string[] stats = rawStat.Split(':');
 

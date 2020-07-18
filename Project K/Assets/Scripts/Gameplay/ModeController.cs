@@ -1,16 +1,36 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
+
+public class PlayerStats
+{
+    public PlayerController player;
+    public MatchFeedController feedCtrl;
+
+    public float score = 0.0f;
+}
+
+public class Team
+{
+    public string Name = "";
+
+    public float Score = 0.0f;
+
+    public int Count = 0;
+    public List<KeyValuePair<int, int>> Members = new List<KeyValuePair<int, int>>();
+}
 
 public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
 {
     public string modeName = "FFA";
 
     [Header("Team")]
-    public bool Teams = true;
+    public bool Teams = false;
+    public int TeamCount = 0;
 
     [Header("Respawn")]
     public bool Respawn = true;
@@ -29,21 +49,35 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
     public int RegenAmount = 15;
 
     [Header("Ref")]
-    public List<PlayerController> players = new List<PlayerController>();
+    public PlayerController player;
 
     // Private
     MapController Map;
 
-    //Dictionary<int, Score> Scores = new Dictionary<int, Score>();
+    // Team
+    Dictionary<int, Team> TeamCtrl = new Dictionary<int, Team>();
+
+    int teamNeedsPlayer = -1;
+
+    private GameObject ModeUI;
+
+    private TextMeshProUGUI matchTimerText;
+    private TextMeshProUGUI startTimerText;
+
+    private TextMeshProUGUI Team1ScoreText;
+    private TextMeshProUGUI Team2ScoreText;
+
+    public int playerCount = 1;
     int myId = -1;
     float score = 0.0f;
 
-    private List<GameObject> modeUI = new List<GameObject>();
-    private List<TextMeshProUGUI> matchTimers = new List<TextMeshProUGUI>();
-    private List<TextMeshProUGUI> startTimers = new List<TextMeshProUGUI>();
+    private bool Setup = false;
+    bool Inited = false;
 
-    private List<TextMeshProUGUI> Team1Score = new List<TextMeshProUGUI>();
-    private List<TextMeshProUGUI> Team2Score = new List<TextMeshProUGUI>();
+    public List<int> tempIdList = new List<int>();
+
+    float score1 = 0.0f;
+    float score2 = 0.0f;
 
     // Sync Vars
     private bool Starting = false;
@@ -51,29 +85,57 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
     private float startTimer = 5.0f;
     private float matchTimer = 5.0f;
 
-    private void Start()
+    Dictionary<int, PlayerStats> Scores = new Dictionary<int, PlayerStats>();
+
+    Dictionary<float, int> ScoreOrder = new Dictionary<float, int>();
+
+    // 1
+    void Awake()
     {
+        Debug.Log("ModeController Awake");
         matchTimer = TimeLimit * 60.0f;
+
+        if(!Teams)
+        {
+
+        }
     }
 
+    // 3
+    void Start()
+    {
+        photonView.RPC("SyncPlayerListRPC", RpcTarget.OthersBuffered, myId, player.playerName);
+
+        tempIdList.Add(myId);
+
+        Debug.Log("ModeController Start");
+
+        //if (photonView.IsMine)
+        {
+            string msg = player.playerName + " Connected";
+            photonView.RPC("SendToFeed", RpcTarget.AllBuffered, msg);
+        }
+    }
+
+    // 4
     void Update()
     {
-        if(Started)
+        if (Started)
         {
             matchTimer -= Time.deltaTime;
 
-            foreach (TextMeshProUGUI mText in matchTimers)
+            //foreach (TextMeshProUGUI mText in matchTimers)
             {
                 float minutes = Mathf.Floor(matchTimer / 60);
-                float seconds = Mathf.RoundToInt(matchTimer % 60);
+                float seconds = Mathf.Floor(matchTimer % 60);
 
                 if (seconds < 10)
                 {
-                    mText.text = minutes.ToString("F0") + ":" + "0" + Mathf.RoundToInt(seconds).ToString();
+                    matchTimerText.text = minutes.ToString("F0") + ":" + "0" + Mathf.RoundToInt(seconds).ToString();
                 }
                 else
                 {
-                    mText.text = minutes.ToString("F0") + ":" + seconds.ToString();
+                    matchTimerText.text = minutes.ToString("F0") + ":" + seconds.ToString();
                 }
             }
 
@@ -88,9 +150,9 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
             {
                 startTimer -= Time.deltaTime;
 
-                foreach (TextMeshProUGUI sText in startTimers)
+                //foreach (TextMeshProUGUI sText in startTimers)
                 {
-                    sText.text = startTimer.ToString("F0");
+                    startTimerText.text = startTimer.ToString("F0");
                 }
 
                 if(startTimer <= 0.0f)
@@ -98,58 +160,86 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
                     Starting = false;
                     Started = true;
 
-                    foreach (TextMeshProUGUI sText in startTimers)
+                    //foreach (TextMeshProUGUI sText in startTimers)
                     {
-                        sText.transform.parent.gameObject.SetActive(false);
+                        startTimerText.transform.parent.gameObject.SetActive(false);
                     }
 
-                    foreach (PlayerController p in players)
+                    //foreach (PlayerController p in players)
                     {
-                        p.PlayerLocked = false;
-                        p.PlayerControl = true;
+                        player.PlayerLocked = false;
+                        player.PlayerControl = true;
+
+                        Setup = true;
                     }
                 }
             }
         }
+
+        if(!Setup && Started)
+        {
+            //foreach (TextMeshProUGUI sText in startTimers)
+            {
+                startTimerText.transform.parent.gameObject.SetActive(false);
+            }
+
+            //foreach (PlayerController p in players)
+            {
+                player.PlayerLocked = false;
+                player.PlayerControl = true;
+            }
+
+            Setup = true;
+        }
+
+        if(Input.GetKeyDown(KeyCode.M))
+        {
+            foreach(KeyValuePair<int, PlayerStats> p in Scores)
+            {
+                Debug.Log(p.Key + " is " + p.Value.player.playerName + " : " + p.Value.score.ToString("F0"));
+            }
+            Debug.Log("|------------------|");
+            for (int i = 0; i < TeamCtrl.Count; i++)
+            {
+                Debug.Log(TeamCtrl[i].Name + ": " + TeamCtrl[i].Count + " | " + (TeamCtrl[i].Count >= 1 ? TeamCtrl[i].Members[0].Key.ToString() : "") + " | " + (TeamCtrl[i].Count >= 2 ? TeamCtrl[i].Members[1].Key.ToString() : ""));
+            }
+        }
     }
 
+    // 2
     [PunRPC]
     public void Initialize()
     {
+        Debug.Log("ModeController Initialize");
         GameObject map = GameObject.FindGameObjectWithTag("Map");
         Map = map.GetComponent<MapController>();
+        Map.RespawnCtrl.ModeCtrl = this;
 
         Transform spawn = Map.GetRandomSpawn();
-        GameObject obj = PhotonNetwork.Instantiate("Player", spawn.position, spawn.rotation);
+        GameObject playerObj = PhotonNetwork.Instantiate("Player", spawn.position, spawn.rotation);
 
-        PlayerController p = obj.GetComponent<PlayerController>();
-        p.modeCtrl = this;
-        p.Health = MaxHealth;
-        players.Add(p);
+        PlayerController playerCtrl = playerObj.GetComponent<PlayerController>();
+        playerCtrl.modeCtrl = this;
+        playerCtrl.mapCtrl = Map;
+        playerCtrl.Health = MaxHealth;
+        player = playerCtrl;
 
-        myId = p.photonView.ViewID;
+        myId = playerCtrl.photonView.ViewID;
 
-        //PhotonNetwork.LocalPlayer.TagObject = p.gameObject;
+        Scores[myId] = new PlayerStats();
+        Scores[myId].player = player;
+        Scores[myId].feedCtrl = player.feedCtrl;
 
-        /*Debug.Log("1");
-        ExitGames.Client.Photon.Hashtable playerHash = new ExitGames.Client.Photon.Hashtable();
-        Debug.Log("2");
-        playerHash.Add("playerObject", playerHash);
-        Debug.Log("3");
-
-        PhotonNetwork.SetPlayerCustomProperties(playerHash);
-        Debug.Log("4");*/
-
-        GameObject o = obj.transform.Find("PlayerUI").Find("InGame").Find("ModeUI").gameObject;
-        modeUI.Add(o);
+        GameObject modeUI = playerObj.transform.Find("PlayerUI").Find("InGame").Find("ModeUI").gameObject;
+        ModeUI = modeUI;
 
         matchTimer = TimeLimit * 60.0f;
 
         // Match Timer
-        TextMeshProUGUI m = o.transform.Find("MatchTimer").Find("MatchTimerText").GetComponent<TextMeshProUGUI>();
-        matchTimers.Add(m);
+        TextMeshProUGUI m = modeUI.transform.Find("MatchTimer").Find("MatchTimerText").GetComponent<TextMeshProUGUI>();
+        matchTimerText = m;
         float minutes = Mathf.Floor(matchTimer / 60);
-        float seconds = Mathf.RoundToInt(matchTimer % 60);
+        float seconds = Mathf.Floor(matchTimer % 60);
 
         if (seconds < 10)
         {
@@ -157,33 +247,80 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
         }
         else
         {
-            m.text = minutes.ToString("F0") + ":" + seconds.ToString();
+            m.text = minutes.ToString("F0") + seconds.ToString();
         }
 
         // Start Timer
-        TextMeshProUGUI s = o.transform.Find("StartTimer").Find("StartTimerText").GetComponent<TextMeshProUGUI>();
-        startTimers.Add(s);
+        TextMeshProUGUI s = modeUI.transform.Find("StartTimer").Find("StartTimerText").GetComponent<TextMeshProUGUI>();
+        startTimerText = s;
         s.text = startTimer.ToString("F0");
 
         // Model Label
-        TextMeshProUGUI ml = o.transform.Find("ModeLabel").Find("ModeLabelText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI ml = modeUI.transform.Find("ModeLabel").Find("ModeLabelText").GetComponent<TextMeshProUGUI>();
         ml.text = modeName;
-        ml = o.transform.Find("ModeLabel").Find("ModeWinCondition").GetComponent<TextMeshProUGUI>();
+        ml = modeUI.transform.Find("ModeLabel").Find("ModeWinCondition").GetComponent<TextMeshProUGUI>();
         ml.text = ScoreLimit.ToString("F0") + " Points";
 
         // Scores
-        TextMeshProUGUI ts1 = o.transform.Find("Team1Score").Find("ScoreText").GetComponent<TextMeshProUGUI>();
-        Team1Score.Add(ts1);
+        TextMeshProUGUI ts1 = modeUI.transform.Find("Team1Score").Find("ScoreText").GetComponent<TextMeshProUGUI>();
+        Team1ScoreText = ts1;
         ts1.text = "0";
-        TextMeshProUGUI ts2 = o.transform.Find("Team2Score").Find("ScoreText").GetComponent<TextMeshProUGUI>();
-        Team2Score.Add(ts2);
+        TextMeshProUGUI ts2 = modeUI.transform.Find("Team2Score").Find("ScoreText").GetComponent<TextMeshProUGUI>();
+        Team2ScoreText = ts2;
         ts2.text = "0";
+
+        photonView.RPC("JoinTeam", RpcTarget.MasterClient, myId, PhotonNetwork.LocalPlayer.ActorNumber);
 
         // Start
         if (PhotonNetwork.IsMasterClient)
         {
             Starting = true;
         }
+
+        Inited = true;
+    }
+
+    [PunRPC]
+    void JoinTeam(int playerId, int roomId)
+    {
+        if(teamNeedsPlayer == -1)
+        {
+            teamNeedsPlayer = TeamCtrl.Count;
+
+            TeamCtrl[teamNeedsPlayer] = new Team();
+            TeamCtrl[teamNeedsPlayer].Name = "Team " + teamNeedsPlayer.ToString();
+        }
+
+        TeamCtrl[teamNeedsPlayer].Count++;
+        TeamCtrl[teamNeedsPlayer].Members.Add(new KeyValuePair<int, int>(playerId, roomId));
+
+        photonView.RPC("SyncTeamsRPC", RpcTarget.Others, teamNeedsPlayer, TeamCtrl[teamNeedsPlayer].Count, playerId, roomId);
+
+        if (Teams)
+        {
+            for (int i = 0; i < TeamCtrl.Count; i++)
+            {
+                if(TeamCtrl[teamNeedsPlayer].Count >= TeamCtrl[i].Count)
+                {
+                    teamNeedsPlayer = i;
+                }
+            }
+        }
+        else
+        {
+            teamNeedsPlayer = -1;
+        }
+    }
+
+    [PunRPC]
+    void SyncTeamsRPC(int team, int count, int playerId, int roomId)
+    {
+        if(count == 1)
+            TeamCtrl[team] = new Team();
+
+        TeamCtrl[team].Count = count;
+        TeamCtrl[team].Members.Add(new KeyValuePair<int, int>(playerId, roomId));
+        TeamCtrl[team].Name = "Team " + team.ToString();
     }
 
     public Transform GetRespawn()
@@ -206,7 +343,11 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
         }
 
         if(PhotonNetwork.IsMasterClient)
-            StartCoroutine(RespawnPlayer(player));
+        {
+            //StartCoroutine(RespawnPlayer(player));
+        }
+
+        Scores[enemyId].score += 1.0f;
 
         if(myId == enemyId)
         {
@@ -216,27 +357,63 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
                 Debug.Log("Wonnered");
             }
 
-            Team1Score[0].text = score.ToString("F0");
+            Team1ScoreText.text = score.ToString("F0");
         }
+
+        Debug.Log("Died: " + enemyId + " | | " + playerId);
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log("Died2: " + Scores[enemyId].player.playerName + " | | " + Scores[playerId].player.playerName);
+
+            string msg = Scores[enemyId].player.playerName + " Killed " + Scores[playerId].player.playerName;
+            photonView.RPC("SendToFeed", RpcTarget.All, msg);
+        }
+    }
+
+    [PunRPC]
+    void SendToFeed(string msg)
+    {
+        Debug.Log("ModeController SendToFeed");
+        Scores[myId].feedCtrl.AddFeedListing(msg, Color.black);
     }
 
     IEnumerator RespawnPlayer(GameObject playerObj)
     {
+        Debug.Log("Prep4Resoawned: " + playerObj.GetComponent<PhotonView>().ViewID);
         yield return new WaitForSeconds(RespawnTimer);
 
-        Transform t = GetRespawn();
-        playerObj.GetComponent<PhotonView>().RPC("Respawn", RpcTarget.AllBuffered, t.position, t.rotation);
+        Debug.Log("Resoawned: " + playerObj.GetComponent<PhotonView>().ViewID);
 
+        Transform t = GetRespawn();
+        playerObj.GetComponent<PhotonView>().RPC("Respawn", RpcTarget.All, t.position, t.rotation);
     }
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
+        if (!Inited) return;
+
         if (stream.IsWriting)
         {
             stream.SendNext(Starting);
             stream.SendNext(Started);
             stream.SendNext(startTimer);
             stream.SendNext(matchTimer);
+
+            float s1 = 0.0f;
+            float s2 = 0.0f;
+
+            foreach (KeyValuePair<int, PlayerStats> p in Scores)
+            {
+                float s = Mathf.Min(s1, p.Value.score);
+                s1 = Mathf.Max(s1, p.Value.score);
+                s2 = Mathf.Max(s2, s);
+            }
+
+            stream.SendNext(s1);
+            stream.SendNext(s2);
+
+            score1 = s1;
+            score2 = s2;
         }
         else
         {
@@ -244,6 +421,81 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
             Started = (bool)stream.ReceiveNext();
             startTimer = (float)stream.ReceiveNext();
             matchTimer = (float)stream.ReceiveNext();
+
+            score1 = (float)stream.ReceiveNext();
+            score2 = (float)stream.ReceiveNext();
         }
+
+        if (PhotonNetwork.CurrentRoom.PlayerCount > 1)
+        {
+            if (score1 != score)
+            {
+                Team2ScoreText.text = score1.ToString("F0");
+            }
+            else
+            {
+                Team2ScoreText.text = score2.ToString("F0");
+            }
+        }
+    }
+
+    public override void OnPlayerEnteredRoom(Player newPlayer)
+    {
+        if (!Setup && Started)
+        {
+            //foreach (TextMeshProUGUI sText in startTimers)
+            {
+                startTimerText.transform.parent.gameObject.SetActive(false);
+            }
+
+            //foreach (PlayerController p in players)
+            {
+                player.PlayerLocked = false;
+                player.PlayerControl = true;
+            }
+        }
+    }
+
+    public override void OnPlayerLeftRoom(Player newPlayer)
+    {
+        string msg = newPlayer.NickName.Split('#')[0] + " Left The Game";
+        player.modeCtrl.photonView.RPC("SendToFeed", RpcTarget.All, msg);
+
+        for(int i = 0; i < TeamCtrl.Count; i++)
+        {
+            for (int j = 0; j < TeamCtrl[i].Members.Count; j++)
+            {
+                KeyValuePair<int, int> member = TeamCtrl[i].Members[j];
+                if (member.Value == newPlayer.ActorNumber)
+                {
+                    TeamCtrl[i].Count--;
+                    TeamCtrl[i].Members.RemoveAt(j);
+
+                    teamNeedsPlayer = i;
+
+                    if (TeamCtrl[i].Count == 0)
+                    {
+
+                    }
+
+                    return;
+                }
+            }
+        }
+    }
+
+    [PunRPC]
+    void SyncPlayerListRPC(int id, string name)
+    {
+        PlayerController p = PhotonView.Find(id).GetComponent<PlayerController>();
+        if(p.playerName == "")
+        {
+            p.playerName = name;
+        }
+        Scores[id] = new PlayerStats();
+        Scores[id].player = p;
+
+        tempIdList.Add(id);
+        playerCount++;
     }
 }

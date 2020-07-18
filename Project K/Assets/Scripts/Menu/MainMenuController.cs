@@ -13,7 +13,6 @@ public class MainMenuController : MonoBehaviourPunCallbacks
     public bool Connected = false;
 
     public RawImage ConnectionStatus;
-    public Text Server;
 
     public GameObject MainMenuPanel;
     public GameObject MatchListPanel;
@@ -37,13 +36,10 @@ public class MainMenuController : MonoBehaviourPunCallbacks
     {
         Connected = true;
         ConnectionStatus.color = Color.green;
-
-        Server.text = PhotonNetwork.CloudRegion + ":" + PhotonNetwork.CurrentCluster + ":" + PhotonNetwork.CurrentLobby;
     }
 
     public override void OnJoinedLobby()
     {
-        Server.text = PhotonNetwork.CloudRegion + ":" + PhotonNetwork.CurrentCluster + ":" + PhotonNetwork.CurrentLobby;
     }
 
     public override void OnLobbyStatisticsUpdate(List<TypedLobbyInfo> lobbyStatistics)

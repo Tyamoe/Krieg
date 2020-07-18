@@ -97,6 +97,10 @@ public class NetworkController : MonoBehaviourPunCallbacks
 
         PhotonNetwork.NickName = PlayerName;
 
+        Game.Name = PlayerName;
+
+        Debug.Log("Player ID: " + Game.ID);
+
         PhotonNetwork.AutomaticallySyncScene = true;
         PhotonNetwork.JoinLobby();
 
