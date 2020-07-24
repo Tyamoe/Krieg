@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 335.38, y: 0}
-  m_SizeDelta: {x: 212.75385, y: 30}
+  m_AnchoredPosition: {x: 410.87, y: 0}
+  m_SizeDelta: {x: 263.087, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5020786052242228884
 CanvasRenderer:
@@ -166,9 +166,9 @@ GameObject:
   m_Component:
   - component: {fileID: 250599458469753829}
   - component: {fileID: 2778596659815400953}
+  - component: {fileID: 1129543606846243539}
   - component: {fileID: 6131243092299769000}
   - component: {fileID: 617586734278099925}
-  - component: {fileID: 1129543606846243539}
   m_Layer: 11
   m_Name: ScoreboardListing
   m_TagString: Untagged
@@ -196,7 +196,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 499.34308, y: 30}
+  m_SizeDelta: {x: 600, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2778596659815400953
 CanvasRenderer:
@@ -206,6 +206,24 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6120479771524153798}
   m_CullTransparentMesh: 0
+--- !u!114 &1129543606846243539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6120479771524153798}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18a7e77ecaa87da46b33e2e2ff69bc8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Name: {fileID: 6039645800795440078}
+  Score: {fileID: 6508605918718162526}
+  Ping: {fileID: 3780898049551075207}
+  player: {fileID: 0}
+  id: 0
+  modeCtrl: {fileID: 0}
 --- !u!114 &6131243092299769000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -220,7 +238,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0.14901961, g: 0.14901961, b: 0.14901961, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -278,21 +296,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &1129543606846243539
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6120479771524153798}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 18a7e77ecaa87da46b33e2e2ff69bc8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Name: {fileID: 6039645800795440078}
-  Score: {fileID: 6508605918718162526}
-  Ping: {fileID: 3780898049551075207}
 --- !u!1 &6194564421352084668
 GameObject:
   m_ObjectHideFlags: 0
@@ -483,8 +486,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 114.49924, y: 0}
-  m_SizeDelta: {x: 229.00153, y: 30}
+  m_AnchoredPosition: {x: 139.66, y: 0}
+  m_SizeDelta: {x: 279.32465, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2945081681715275155
 CanvasRenderer:
@@ -522,8 +525,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278216447
+  m_fontColor: {r: 1, g: 0.4, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

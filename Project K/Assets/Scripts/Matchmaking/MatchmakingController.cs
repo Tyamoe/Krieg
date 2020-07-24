@@ -24,6 +24,8 @@ public class MatchmakingController : MonoBehaviourPunCallbacks
         Debug.Log("MatchmakingController OnJoinedRoom");
         Debug.Log(PhotonNetwork.NickName);
 
+        Game.LeftMatch = false;
+
         // Load Match or Join
         EnterGame();
     }

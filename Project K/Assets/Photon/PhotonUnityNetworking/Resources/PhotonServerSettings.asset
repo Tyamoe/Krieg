@@ -71,6 +71,10 @@ MonoBehaviour:
   - SendToFeed
   - JoinTeam
   - SyncTeamsRPC
+  - SyncVars
+  - SyncVarsStart
+  - SyncVarsUpdate
+  - StartSpawnRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

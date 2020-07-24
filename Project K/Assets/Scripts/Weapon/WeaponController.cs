@@ -59,6 +59,9 @@ public class WeaponController : MonoBehaviour
     [Header("ADS")]
     public float ADSSpeed = 0.2f;
     public bool toggleADS = false;
+
+    [Space]
+    public Transform ADSPos;
     /*[Range(0.0f, 5.0f)]
     public float ADSForwardLean = 1.4f;
     [Range(0.0f, 5.0f)]
@@ -93,6 +96,7 @@ public class WeaponController : MonoBehaviour
 
     [Space]
     public Transform GunMagazine;
+    public Transform BarrelExit;
     public Transform SightPivot;
     public Transform Grip;
     public Transform Trigger;
@@ -136,8 +140,6 @@ public class WeaponController : MonoBehaviour
     private Vector3 RecoilVector = Vector3.zero;
     private Vector3 tempRecoilVector = Vector3.zero;
     private float weaponShift = 0.0f;
-
-    private Transform BulletSpawn;
 
     [HideInInspector]
     public bool flashActive = false;
@@ -189,6 +191,7 @@ public class WeaponController : MonoBehaviour
     private Transform tempReload = null;
 
     private Vector3 locPos;
+    private Vector3 locPos1;
 
     private bool reloadAds = false;
 
@@ -197,79 +200,8 @@ public class WeaponController : MonoBehaviour
 
     void OnEnable()
     {
+        //locPos1 = WeaponPivotHidden.localPosition;
         Active = false;
-    }
-
-    public void WeaponSwap(bool active)
-    {
-        if (Active == active) return;
-
-        if (active)
-        {
-            if (Started)
-            {
-                UpdateWeaponUI();
-                UpdateHipfireSpread(true);
-
-                if (player.playerADS)
-                {
-                    triggerADS = true;
-                }
-                player.playerReload = false;
-            }
-        }
-        else
-        {
-            if (Started)
-            {
-                ADSToggled = false;
-                triggerUnADS = false;
-
-                ads = false;
-                adsDone = false;
-
-                player.FPSCamera.cullingMask = defualtMask;
-
-                //
-                CameraPivot.localPosition = initCameraPos;
-                adsDone = true;
-
-                forwardOffset = ForwardOffset;
-
-                Crosshair.SetActive(false);
-
-                //
-                if (reloading)
-                {
-                    reloading = false;
-                    playerAnim.SetFloat("ReloadTime", -1.0f);
-                    reloadTime = 0.0f;
-
-                    GunMagazine.parent = WeaponPivot;
-                    GunMagazine.localPosition = new Vector3(0.0f, 0.1f, 0.0f);
-                    GunMagazine.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
-                    GunMagazine.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-                    GunMagazine = tempReload;
-                }
-
-                //
-                canShoot = true;
-                currFireCooldown = fireCooldown;
-                //player.playerADS = false;
-                HeldDown = false;
-                framesHeld = 0.0f;
-
-                recoilReset = true;
-                RecoilVector = Vector3.zero;
-                weaponShift = 0.0f;
-
-                releaseTime = 0.0f;
-                recentlyReleased = false;
-                currFireCooldown = fireCooldown;
-
-                player.playerReload = false;
-            }
-        }
     }
 
     void OnDisable()
@@ -277,10 +209,13 @@ public class WeaponController : MonoBehaviour
         Active = false;
     }
 
+    void Awake()
+    {
+        locPos1 = WeaponPivotHidden.localPosition;
+    }
+
     void Start()
     {
-        WeaponChange();
-
         if (!photonView.IsMine && PhotonNetwork.IsConnected)
         {
             return;
@@ -311,8 +246,6 @@ public class WeaponController : MonoBehaviour
         Crosshair = player.Crosshair;
         Hitmarker = player.Hitmarker.GetComponent<RawImage>();
 
-        //hipfireSpreadX = HipfireSpreadX;
-        //hipfireSpreadY = HipfireSpreadY;
         UpdateHipfireSpread();
 
         Started = true;
@@ -339,7 +272,7 @@ public class WeaponController : MonoBehaviour
             Quaternion rotation = Quaternion.LookRotation(relativePos, Vector3.up);
             WeaponRotation = rotation.eulerAngles;
 
-            WeaponRotation = new Vector3(WeaponRotation.x, WeaponRotation.y - forwardOffset, WeaponRotation.z);
+            WeaponRotation = new Vector3(WeaponRotation.x, WeaponRotation.y/* - forwardOffset*/, WeaponRotation.z);
             WeaponRotationDef = WeaponRotation;
         }
 
@@ -441,7 +374,9 @@ public class WeaponController : MonoBehaviour
 
                     adsTime = ADSSpeed;
 
-                    adsVector = SightPivot.position - CameraPivot.position;
+                    //adsVector = SightPivot.position - CameraPivot.position;
+                    adsVector = ADSPos.localPosition - WeaponPivotHidden.localPosition;
+                    //locPos1 = WeaponPivotHidden.localPosition;
                 }
                 else
                 {
@@ -449,6 +384,9 @@ public class WeaponController : MonoBehaviour
 
                     ads = false;
                     adsDone = false;
+
+                    adsTime = ADSSpeed;
+                    adsVector = WeaponPivotHidden.localPosition - locPos1;
 
                     player.FPSCamera.cullingMask = defualtMask;
                 }
@@ -462,7 +400,9 @@ public class WeaponController : MonoBehaviour
 
                 adsTime = ADSSpeed;
 
-                adsVector = SightPivot.position - CameraPivot.position;
+                //adsVector = SightPivot.position - CameraPivot.position;
+                adsVector = ADSPos.localPosition - WeaponPivotHidden.localPosition;
+                //locPos1 = WeaponPivotHidden.localPosition;
             }
         }
         
@@ -471,14 +411,20 @@ public class WeaponController : MonoBehaviour
         {
             if (adsDone)
             {
-                CameraPivot.position = SightPivot.position;
+                //CameraPivot.position = SightPivot.position;
+                WeaponPivotHidden.localPosition = ADSPos.localPosition;
+                WeaponPivotHidden.eulerAngles = ADSPos.eulerAngles;
+                //WeaponPivot.localPosition = new Vector3(0.0f, 0.2f, WeaponPivot.localPosition.z);
             }
         }
 
         // ADS Animation / Timers
         if (ads && !adsDone)
         {
-            CameraPivot.position += adsVector * (Time.deltaTime * (1.0f / ADSSpeed));
+            //CameraPivot.position += adsVector * (Time.deltaTime * (1.0f / ADSSpeed));
+            WeaponPivotHidden.localPosition += adsVector * (Time.deltaTime * (1.0f / ADSSpeed));
+
+            player.FPSCamera.fieldOfView -= 20.0f * (Time.deltaTime * (1.0f / ADSSpeed));
 
             // * WEAPON ROTATION OFFSET *
             forwardOffset -= ForwardOffset * ((2.0f * Time.deltaTime) * (1.0f / ADSSpeed));
@@ -487,7 +433,13 @@ public class WeaponController : MonoBehaviour
             adsTime -= Time.deltaTime;
             if (adsTime <= 0.00f)
             {
-                CameraPivot.position = SightPivot.position;
+                player.FPSCamera.fieldOfView = 55.0f;
+                //CameraPivot.position = SightPivot.position;
+                //WeaponPivot.localPosition = new Vector3(0.0f, 0.0f, WeaponPivot.localPosition.z);
+                WeaponPivot.localEulerAngles = Vector3.zero;
+
+                WeaponPivotHidden.localPosition = ADSPos.localPosition;
+
                 adsDone = true;
 
                 Crosshair.SetActive(false);
@@ -511,6 +463,9 @@ public class WeaponController : MonoBehaviour
                 ads = false;
                 adsDone = false;
 
+                adsTime = ADSSpeed;
+                adsVector = WeaponPivotHidden.localPosition - locPos1;
+
                 player.FPSCamera.cullingMask = defualtMask;
             }
         }
@@ -518,18 +473,34 @@ public class WeaponController : MonoBehaviour
         // UnADS Animation
         if (!ads && !adsDone)
         {
-            CameraPivot.localPosition = Vector3.Lerp(CameraPivot.localPosition, initCameraPos, ADSSpeed / 2.0f);
+            //CameraPivot.localPosition = Vector3.Lerp(CameraPivot.localPosition, initCameraPos, ADSSpeed / 2.0f);
+            //WeaponPivotHidden.localPosition = Vector3.Lerp(WeaponPivotHidden.localPosition, locPos1, ADSSpeed / 2.0f);
+            WeaponPivotHidden.localPosition -= adsVector * (Time.deltaTime * (1.0f / ADSSpeed));
+
+            player.FPSCamera.fieldOfView += 20.0f * (Time.deltaTime * (1.0f / ADSSpeed));
 
             // * WEAPON ROTATION OFFSET *
             forwardOffset += ForwardOffset * ((2.0f * Time.deltaTime) * (1.0f / ADSSpeed));
             forwardOffset = Mathf.Clamp(forwardOffset, 0.0f, ForwardOffset);
 
-            if (Vector3.Distance(CameraPivot.localPosition, initCameraPos) < 0.01f)
+            //if (Vector3.Distance(CameraPivot.localPosition, initCameraPos) < 0.01f)
+            //if (Vector3.Distance(WeaponPivotHidden.localPosition, locPos1) < 0.01f)
+
+            adsTime -= Time.deltaTime;
+            if (adsTime <= 0.00f)
             {
-                CameraPivot.localPosition = initCameraPos;
+                //CameraPivot.localPosition = initCameraPos;
+                WeaponPivotHidden.localPosition = locPos1;
                 adsDone = true;
 
+                player.FPSCamera.fieldOfView = 75.0f;
+
+                //WeaponPivot.localPosition = new Vector3(0.0f, 0.0f, WeaponPivot.localPosition.z);
+                WeaponPivot.localEulerAngles = new Vector3(0.0f, 355.0f, 0.0f);
+
                 forwardOffset = ForwardOffset;
+
+                adsVector = Vector3.zero;
 
                 if (!reloading)
                 {
@@ -573,13 +544,11 @@ public class WeaponController : MonoBehaviour
                 }
 
                 Vector3 target = Vector3.zero;
-
                 Vector3 dir = Vector3.zero;
 
                 if (ads && adsDone)
                 {
                     dir = Vector3.Normalize(player.FPSCamera.transform.forward + RecoilVector);
-                    //target = player.FPSCamera.transform.position + (Vector3.Normalize(player.FPSCamera.transform.forward + RecoilVector) * 10000.0f);
                 }
                 else
                 {
@@ -591,13 +560,11 @@ public class WeaponController : MonoBehaviour
                     RecoilV += recoilV.y * player.FPSCamera.transform.up;
 
                     dir = Vector3.Normalize(player.FPSCamera.transform.forward + RecoilV);
-                    //target = player.FPSCamera.transform.position + (Vector3.Normalize(player.FPSCamera.transform.forward + RecoilV) * 10000.0f);
                 }
                 target = player.FPSCamera.transform.position + (dir * 10000.0f);
 
                 //RaycastHit[] hits = Physics.RaycastAll(player.FPSCamera.transform.position, dir, 1000.0f);
                 RaycastHit hit;
-                //if (Physics.Linecast(player.FPSCamera.transform.position, target, out hit))
                 if (Physics.Raycast(player.FPSCamera.transform.position, dir, out hit, 1000.0f, ~IgnoreMask))
                 {
                     PlayerController enemy = null;
@@ -636,24 +603,6 @@ public class WeaponController : MonoBehaviour
                     }
                     else
                     {
-                        if (!flashActive)
-                        {
-                            // Tracer
-                            if (PhotonNetwork.IsConnected)
-                            {
-                                GetComponent<PhotonView>().RPC("InitiateTracing", RpcTarget.All, dir);
-
-                                //GameObject f = PhotonNetwork.Instantiate("Tracer", BulletSpawn.position, BulletSpawn.rotation);
-                                //f.GetComponent<Tracer>().direction = dir;
-                                //f.GetPhotonView().RPC("Me", RpcTarget.MasterClient, dir);
-                            }
-                            else
-                            {
-                                GameObject f = Instantiate(TracerPrefab, BulletSpawn.position, BulletSpawn.rotation);
-                                f.GetComponent<Tracer>().direction = dir;
-                            }
-                        }
-
                         audioSource.PlayOneShot(FireSFX);
                     }
                 }
@@ -700,17 +649,28 @@ public class WeaponController : MonoBehaviour
                 float camRot = recoilY * -1.0f;
                 cameraCtrl.UpdateEulerX(camRot);
                 
-                // Muzzle Flash
+                // Muzzle Flash & Tracer
                 if (!flashActive)
                 {
                     flashActive = true;
-                    GameObject f = Instantiate(MuzzleFlash, BulletSpawn.position, BulletSpawn.rotation);
+                    GameObject f = Instantiate(MuzzleFlash, BarrelExit.position, BarrelExit.rotation);
                     MuzzleFlash m = f.GetComponent<MuzzleFlash>();
                     m.parentWeapon = this;
-                    f.transform.parent = BulletSpawn;
+                    f.transform.parent = BarrelExit;
 
                     if (PhotonNetwork.IsConnected)
                         GetComponent<PhotonView>().RPC("ActivateMuzzleFlash", RpcTarget.Others);
+
+                    // Tracer
+                    if (PhotonNetwork.IsConnected)
+                    {
+                        GetComponent<PhotonView>().RPC("InitiateTracing", RpcTarget.All, dir);
+                    }
+                    else
+                    {
+                        GameObject f150 = Instantiate(TracerPrefab, BarrelExit.position, BarrelExit.rotation);
+                        f150.GetComponent<Tracer>().direction = dir;
+                    }
                 }
 
                 if (semiAuto)
@@ -747,9 +707,9 @@ public class WeaponController : MonoBehaviour
 
                 RecoilVector = Vector3.zero;
 
-                WeaponRotation = WeaponRotationDef;
-
                 weaponShift = 0.0f;
+
+                //cameraCtrl.UnAccum();
             }
             else
             {
@@ -758,7 +718,7 @@ public class WeaponController : MonoBehaviour
                 Vector3 euler = WeaponPivot.eulerAngles;
                 float weaponShift1 = weaponShift * (Time.deltaTime * (1.0f / RecoilReset)) * -RecoilDeltaY;
 
-                WeaponRotation = Vector3.Lerp(WeaponRotation, WeaponRotationDef, RecoilLerp);
+                //WeaponRotation = Vector3.Lerp(WeaponRotation, WeaponRotationDef, RecoilLerp);
             }
         }
         
@@ -799,8 +759,80 @@ public class WeaponController : MonoBehaviour
         Quaternion newRot = Quaternion.Euler(WeaponRotation);
         WeaponPivot.rotation = newRot;
 
-        newRot = Quaternion.Euler(WeaponRotationDef);
-        WeaponPivotHidden.rotation = newRot;
+        //newRot = Quaternion.Euler(WeaponRotationDef);
+        //WeaponPivotHidden.rotation = newRot;
+    }
+
+    public void WeaponSwap(bool active)
+    {
+        if (Active == active) return;
+
+        if (active)
+        {
+            if (Started)
+            {
+                UpdateWeaponUI();
+                UpdateHipfireSpread(true);
+
+                if (player.playerADS)
+                {
+                    triggerADS = true;
+                }
+                player.playerReload = false;
+            }
+        }
+        else
+        {
+            if (Started)
+            {
+                ADSToggled = false;
+                triggerUnADS = false;
+
+                ads = false;
+                adsDone = false;
+
+                player.FPSCamera.cullingMask = defualtMask;
+
+                //
+                CameraPivot.localPosition = initCameraPos;
+                adsDone = true;
+
+                forwardOffset = ForwardOffset;
+
+                Crosshair.SetActive(false);
+
+                //
+                if (reloading)
+                {
+                    reloading = false;
+                    playerAnim.SetFloat("ReloadTime", -1.0f);
+                    reloadTime = 0.0f;
+
+                    GunMagazine.parent = WeaponPivot;
+                    GunMagazine.localPosition = new Vector3(0.0f, 0.1f, 0.0f);
+                    GunMagazine.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
+                    GunMagazine.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+                    GunMagazine = tempReload;
+                }
+
+                //
+                canShoot = true;
+                currFireCooldown = fireCooldown;
+                //player.playerADS = false;
+                HeldDown = false;
+                framesHeld = 0.0f;
+
+                recoilReset = true;
+                RecoilVector = Vector3.zero;
+                weaponShift = 0.0f;
+
+                releaseTime = 0.0f;
+                recentlyReleased = false;
+                currFireCooldown = fireCooldown;
+
+                player.playerReload = false;
+            }
+        }
     }
 
     IEnumerator ShowHitmarker(float showTime, Color hitmarkerColor)
@@ -852,37 +884,35 @@ public class WeaponController : MonoBehaviour
         AmmoText.text = MagSize + "/" + (reserveAmmo < 0 ? 0 : reserveAmmo);
     }
 
-    void WeaponChange()
+    public void ResetAmmo()
     {
-        GameObject a = WeaponPivot.Find("BulletExit").gameObject;//GameObject.Find("BulletExit");
-        if (!a)
-        {
-            a = WeaponPivot.gameObject;
-        }
+        MagSize = magSize;
+        ClipCount = clipCount;
 
-        BulletSpawn = a.transform;
+        reserveAmmo = clipCount * MagSize;
 
-        //Debug.Log(BulletSpawn.name);
+        if(Active)
+            AmmoText.text = magSize + "/" + reserveAmmo;
     }
 
     [PunRPC]
     void InitiateTracing(Vector3 diri)
     {
-        GameObject f = Instantiate(TracerPrefab, BulletSpawn.position, BulletSpawn.rotation);
+        GameObject f = Instantiate(TracerPrefab, BarrelExit.position, BarrelExit.rotation);
         f.GetComponent<Tracer>().direction = diri;
     }
 
     [PunRPC]
     private void TracerRPC()
     {
-        GameObject f = Instantiate(TracerPrefab, BulletSpawn.position, BulletSpawn.rotation);
+        GameObject f = Instantiate(TracerPrefab, BarrelExit.position, BarrelExit.rotation);
         f.GetComponent<Tracer>().direction = player.FPSCamera.transform.forward;
     }
 
     [PunRPC]
     private void ActivateMuzzleFlash()
     {
-        GameObject f = Instantiate(MuzzleFlash, BulletSpawn.position, BulletSpawn.rotation);
+        GameObject f = Instantiate(MuzzleFlash, BarrelExit.position, BarrelExit.rotation);
         Destroy(f, 0.5f);
     }
 

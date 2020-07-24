@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(Transform))]
+//[CustomEditor(typeof(Transform))]
 class DebugMenu : Editor
 {
-    public override void OnInspectorGUI() 
+    /*public override void OnInspectorGUI() 
     {
         Transform t = Selection.activeGameObject.GetComponent<Transform>();
 
@@ -27,5 +27,5 @@ class DebugMenu : Editor
         EditorGUILayout.BeginHorizontal();
         t.localScale = EditorGUILayout.Vector3Field("Scale", t.localScale);
         EditorGUILayout.EndHorizontal();
-    }
+    }*/
 }

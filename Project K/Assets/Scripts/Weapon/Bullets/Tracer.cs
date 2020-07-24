@@ -26,7 +26,7 @@ public class Tracer : MonoBehaviour
     {
         //if (photonView.IsMine || !PhotonNetwork.IsConnected)
         {
-            body.AddForce(direction * 2500.0f);
+            body.AddForce(direction * 3100.0f);
             //Debug.Log("AddForce: " + direction * 10.0f);
 
             timer -= Time.deltaTime;

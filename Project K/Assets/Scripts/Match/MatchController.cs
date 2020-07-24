@@ -80,7 +80,7 @@ public class MatchController : MonoBehaviourPunCallbacks
                 StartMatch();
             }
 
-            StartMatchText.text = startTime.ToString("F0");
+            StartMatchText.text = "Starting In " + startTime.ToString("F0");
 
             photonView.RPC("UpdateStartTimeRPC", RpcTarget.OthersBuffered, startTime);
         }
@@ -94,10 +94,13 @@ public class MatchController : MonoBehaviourPunCallbacks
 
     public void LeaveRoom()
     {
-        Game.PlayHigh();
-
         if (!starting)
+        {
+            Game.PlayHigh();
+            Game.LeftMatch = true;
+
             PhotonNetwork.LeaveRoom();
+        }
     }
 
     public override void OnLeftRoom()
@@ -259,7 +262,7 @@ public class MatchController : MonoBehaviourPunCallbacks
         photonView.RPC("UpdateVoteStart", RpcTarget.OthersBuffered);
 
         UpdateVoteText();
-        Debug.Log("CustomMade: " + PhotonNetwork.CurrentRoom.CustomProperties.ToStringFull());
+        //Debug.Log("CustomMade: " + PhotonNetwork.CurrentRoom.CustomProperties.ToStringFull());
     }
 
     [PunRPC]

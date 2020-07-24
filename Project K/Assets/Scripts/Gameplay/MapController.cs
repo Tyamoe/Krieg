@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
-public class MapController : MonoBehaviour
+public class MapController : MonoBehaviourPunCallbacks
 {
     public float MapSizeX = 220.0f;
     public float MapSizeY = 340.0f;
@@ -57,6 +58,29 @@ public class MapController : MonoBehaviour
         return RespawnWait;
     }
 
+    public Transform GetRandomStartSpawn()
+    {
+        if(currRespawn_SpawnPoints.Count == 0)
+        {
+            return Respawn_SpawnPoints[0].transform;
+        }
+
+        int index = Random.Range(0, currRespawn_SpawnPoints.Count);
+        Transform t = currRespawn_SpawnPoints[index].transform;
+
+        currRespawn_SpawnPoints.RemoveAt(index);
+
+        photonView.RPC("StartSpawnRPC", RpcTarget.Others, index);
+
+        return t;
+    }
+
+    [PunRPC]
+    void StartSpawnRPC(int rem)
+    {
+        currRespawn_SpawnPoints.RemoveAt(rem);
+    }
+
     public Transform GetRandomSpawn()
     {
         int index = Random.Range(0, Respawn_SpawnPoints.Count);
@@ -70,8 +94,6 @@ public class MapController : MonoBehaviour
         }
 
         Transform t = Respawn_SpawnPoints[index].transform;
-
-        //currRespawn_SpawnPoints.RemoveAt(index);
 
         return t;
     }

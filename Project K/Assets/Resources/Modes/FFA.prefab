@@ -59,6 +59,7 @@ MonoBehaviour:
   RegenAmount: 15
   player: {fileID: 0}
   playerCount: 1
+  score: 0
   tempIdList: 
 --- !u!114 &3905715073305217108
 MonoBehaviour:

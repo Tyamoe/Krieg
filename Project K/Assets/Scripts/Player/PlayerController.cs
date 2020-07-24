@@ -10,9 +10,12 @@ public class PlayerController : MonoBehaviour
 
     public string playerName = "";
 
+    [Header("Weapons")]
+    public int StartWeapon = 0;
+
     [Header("Movement")]
     public float PlayerSpeed = 20.0f;
-    public float PlayerSprintSpeed = 4.0f;
+    public float PlayerSprintSpeed = 1.2f;
     public float PlayerJumpHeight = 2.8f;
     public float PlayerClimbSpeed = 0.9f;
 
@@ -232,11 +235,15 @@ public class PlayerController : MonoBehaviour
     private GameObject InGameUI;
     private GameObject SettingsUI;
 
+    private GameObject Scoreboard;
+
     [HideInInspector]
     public GameObject Crosshair;
     [HideInInspector]
     public GameObject Hitmarker;
 
+    [HideInInspector]
+    public TeamController teamCtrl;
     [HideInInspector]
     public MatchFeedController feedCtrl;
     [HideInInspector]
@@ -251,6 +258,9 @@ public class PlayerController : MonoBehaviour
 
     [HideInInspector]
     public HandIK handIK;
+
+    // Network
+    public int Ping = -1;
 
     // Minimap
     private RectTransform minimapCtrl;
@@ -385,6 +395,8 @@ public class PlayerController : MonoBehaviour
         //player.detectCollisions = false;
         Physics.IgnoreLayerCollision(8, 13);
 
+        currWeapon = StartWeapon;
+
         if (!photonView.IsMine && PhotonNetwork.IsConnected)
         {
             FPSCamera.enabled = false;
@@ -411,6 +423,11 @@ public class PlayerController : MonoBehaviour
                 PlayerLocked = true;
                 PlayerControl = false;
             }
+            else
+            {
+                PlayerLocked = false;
+                PlayerControl = true;
+            }
             FPSCamera.enabled = true;
             EnvCamera.enabled = true;
 
@@ -434,11 +451,17 @@ public class PlayerController : MonoBehaviour
         DebugText = InGameUI.transform.Find("Debug").gameObject.GetComponent<TMPro.TextMeshProUGUI>();
         feedCtrl = InGameUI.transform.Find("Feed").gameObject.GetComponentInChildren<MatchFeedController>();
 
+        Scoreboard = InGameUI.transform.Find("Scoreboard").gameObject;
+        teamCtrl = Scoreboard.GetComponentInChildren<TeamController>();
+
         minimapCtrl = InGameUI.transform.Find("Minimap").Find("MinimapImage").GetComponent<RectTransform>();
         minimapMeCtrl = InGameUI.transform.Find("Minimap").Find("Me").GetComponent<RectTransform>();
 
         HealthBar = InGameUI.transform.Find("HealthBar").GetComponent<Scrollbar>();
         HealthBarStatus = HealthBar.transform.Find("Sliding Area").Find("HealthBarStatus").GetComponent<Image>();
+
+        if (PhotonNetwork.IsConnected)
+            photonView.RPC("SyncVarsStart", RpcTarget.Others, playerName);
     }
 
     void Start()
@@ -450,21 +473,24 @@ public class PlayerController : MonoBehaviour
 
         PlayerVelocity = Vector3.zero;
         SettingsUI.SetActive(false);
+        Scoreboard.SetActive(false);
 
         foreach (WeaponController weapon in weapons.weapons)
         {
             weapon.gameObject.SetActive(false);
         }
-        weapons.weapons[0].gameObject.SetActive(true);
-        weapons.weapons[0].WeaponSwap(true);
+        weapons.weapons[StartWeapon].gameObject.SetActive(true);
+        weapons.weapons[StartWeapon].WeaponSwap(true);
 
-        handIK.leftHandObj = weapons.weapons[0].Grip;
-        handIK.rightHandObj = weapons.weapons[0].Trigger;
+        handIK.leftHandObj = weapons.weapons[StartWeapon].Grip;
+        handIK.rightHandObj = weapons.weapons[StartWeapon].Trigger;
 
-        WeaponMultiplier = WeaponClassModifiers[weapons.weapons[0].weaponClass];
+        WeaponMultiplier = WeaponClassModifiers[weapons.weapons[StartWeapon].weaponClass];
 
         if (PhotonNetwork.IsConnected)
-            GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, 0);
+            GetComponent<PhotonView>().RPC("WeaponSwap", RpcTarget.OthersBuffered, StartWeapon);
+        /*else
+            toggleADS = true;*/
 
         Started = true;
 
@@ -474,6 +500,15 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         if (!photonView.IsMine && PhotonNetwork.IsConnected) return;
+
+        if(!SettingsOpen && Input.GetKeyDown(Keybinds[KeyActions.Scoreboard]))
+        {
+            Scoreboard.SetActive(true);
+        }
+        if (Input.GetKeyUp(Keybinds[KeyActions.Scoreboard]))
+        {
+            Scoreboard.SetActive(false);
+        }
 
         if (Input.GetKeyDown(Keybinds[KeyActions.Menu]) && !PlayerLocked)
         {
@@ -495,7 +530,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // Minimap
-        //if (minimapTimer > 0.10f)
+        if (PhotonNetwork.IsConnected)
         {
             // Position
             Vector2 mpos = mapCtrl.GetMinimapPos(transform.position);
@@ -865,16 +900,18 @@ public class PlayerController : MonoBehaviour
             tempTimer = !tempTimer;
         }
 
-        if (tempFrame >= 5.0f)
+        if (tempFrame >= 5.0f && PhotonNetwork.IsConnected)
         {
+            Ping = PhotonNetwork.GetPing();
+            photonView.RPC("SyncVarsUpdate", RpcTarget.Others, Ping);
             tempFrame = 0.0f;
-            DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
+            DebugText.text = "Health: " + Health + " Ping: " + Ping + " FPS: " + (1.0f / Time.deltaTime);
         }
 
         if(tempTimer)
         {
             tempTime += Time.deltaTime;
-            DebugText.text = "Timer: " + tempTime.ToString("F2") + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
+            DebugText.text = "Timer: " + tempTime.ToString("F2") + " Ping: " + Ping + " FPS: " + (1.0f / Time.deltaTime);
         }
         tempFrame += Time.deltaTime;
 
@@ -935,9 +972,11 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    [Range(-1.0f, 0.0f)]
+    public float groundThreshold = -0.1f;
     bool isGrounded()
     {
-        return player.isGrounded || PlayerVelocity.y > -0.10f && PlayerVelocity.y <= 0.0f;
+        return player.isGrounded || PlayerVelocity.y > -0.316f && PlayerVelocity.y <= 0.0f;
     }
 
     IEnumerator SwitchWeapon(int i)
@@ -1209,6 +1248,15 @@ public class PlayerController : MonoBehaviour
         dead = false;
 
         PlayerLocked = false;
+
+        if(photonView.IsMine)
+        {
+            foreach (WeaponController weapon in weapons.weapons)
+            {
+                weapon.ResetAmmo();
+            }
+            weapons.weapons[currWeapon].UpdateWeaponUI();
+        }
     }
 
     [PunRPC]
@@ -1246,5 +1294,17 @@ public class PlayerController : MonoBehaviour
             weapon.ADSKey = keybinds[KeyActions.ADS];
             weapon.FireKey = keybinds[KeyActions.Fire];
         }
+    }
+
+    [PunRPC]
+    void SyncVarsStart(string name)
+    {
+        playerName = name;
+    }
+
+    [PunRPC]
+    void SyncVarsUpdate(int ping)
+    {
+        Ping = ping;
     }
 }

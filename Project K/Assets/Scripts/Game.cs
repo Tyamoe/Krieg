@@ -5,6 +5,7 @@ using Photon.Realtime;
 public class Game : MonoBehaviour
 {
     public bool Networked;
+    public static bool LeftMatch = false;
 
     private static string PlayerNameID = "";
     private static string PlayerName = "";
@@ -125,7 +126,8 @@ public class Game : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        ExitCalled();
+        if (PhotonNetwork.IsConnected)
+            PhotonNetwork.Disconnect();
     }
 
     public void ExitCalled()

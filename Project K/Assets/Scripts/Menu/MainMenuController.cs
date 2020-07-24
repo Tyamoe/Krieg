@@ -45,12 +45,12 @@ public class MainMenuController : MonoBehaviourPunCallbacks
     public override void OnLobbyStatisticsUpdate(List<TypedLobbyInfo> lobbyStatistics)
     {
         Debug.Log("MainMenuController OnLobbyStatisticsUpdate");
-        Debug.Log("-------------------------------------------");
+        /*Debug.Log("-------------------------------------------");
         foreach (TypedLobbyInfo l in lobbyStatistics)
         {
             Debug.Log(l.Name + " : " + l.PlayerCount + " : " + l.RoomCount);
         }
-        Debug.Log("-------------------------------------------");
+        Debug.Log("-------------------------------------------");*/
     }
 
     public override void OnDisconnected(DisconnectCause cause)

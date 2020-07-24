@@ -309,7 +309,7 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
         settings.ADSMultiplierX = PlayerPrefs.GetFloat(Game.ID + "ADSMultiplierX", 1.0f);
         settings.ADSMultiplierY = PlayerPrefs.GetFloat(Game.ID + "ADSMultiplierY", 1.0f);
 
-        settings.toggleADS = PlayerPrefs.GetInt(Game.ID + "toggleADS", 0) == 0 ? false : true;
+        settings.toggleADS = PlayerPrefs.GetInt(Game.ID + "toggleADS", 1) == 0 ? false : true;
         settings.toggleCrouch = PlayerPrefs.GetInt(Game.ID + "toggleCrouch", 0) == 0 ? false : true;
 
         // Set UI Elements
@@ -513,13 +513,15 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
         //string msg = player.playerName + " Left The Game";
         //player.modeCtrl.photonView.RPC("SendToFeed", RpcTarget.All, msg);
 
+        Game.LeftMatch = true;
+
         Debug.Log("LeaveRoom");
         //PhotonNetwork.DestroyPlayerObjects()
         //PhotonNetwork.Destroy(player.gameObject);
         Debug.Log("Destroy");
         PhotonNetwork.LeaveRoom();
         Debug.Log("Now");
-        PhotonNetwork.LoadLevel(0);
+        //PhotonNetwork.LoadLevel(0);
         Debug.Log("ssss");
 
         //PhotonNetwork.SendAllOutgoingCommands
@@ -527,10 +529,18 @@ public class PlayerSettingsFunctions : MonoBehaviourPunCallbacks
         Game.PlayHigh(settings.uiVolume);
     }
 
+    private void OnDestroy()
+    {
+        Debug.Log("OnDestroy");
+        if(Game.LeftMatch)
+            PhotonNetwork.LoadLevel(0);
+        Debug.Log("Leaving Match");
+    }
+
     public override void OnLeftRoom()
     {
         Debug.Log("OnLeftRoom");
-        PhotonNetwork.LoadLevel(0);
+        //PhotonNetwork.LoadLevel(0);
         Debug.Log("Leaving Game");
     }
 

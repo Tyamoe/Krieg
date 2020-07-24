@@ -104,9 +104,9 @@ public class CameraController : MonoBehaviour
 
         RotatonX += InputY * -SensitivityX_ * (player.playerADS ? ADSMultiplierX : 1.0f) * Time.deltaTime;
 
-        RotatonY += InputX * SensitivityY_ * (player.playerADS ? ADSMultiplierY : 1.0f) * Time.deltaTime;
-
         RotatonXX += InputY * -SensitivityX_ * (player.playerADS ? ADSMultiplierY : 1.0f) * Time.deltaTime;
+
+        RotatonY += InputX * SensitivityY_ * (player.playerADS ? ADSMultiplierY : 1.0f) * Time.deltaTime;
 
         RotatonX = Mathf.Clamp(RotatonX, MinCameraAngle, MaxCameraAngle);
 
@@ -114,7 +114,7 @@ public class CameraController : MonoBehaviour
 
         Quaternion newRot = Quaternion.Euler(RotatonX, transform.eulerAngles.y, transform.eulerAngles.z);
 
-        if(currAngle == 0)
+        //if(currAngle == 0)
         {
             transform.rotation = newRot;
         }
@@ -128,13 +128,56 @@ public class CameraController : MonoBehaviour
         WeaponTiltX = RotatonX;
 
         newRot = Quaternion.Euler(RotatonXX, WeaponPivot.eulerAngles.y, WeaponPivot.eulerAngles.z);
-        WeaponPivot.rotation = newRot;
+        //WeaponPivot.rotation = newRot;
     }
+
+    float accumY = 0.0f;
 
     public void UpdateEulerX(float rotX)
     {
         RotatonX += rotX;
         RotatonXX += rotX;
+
+        accumY += rotX;
+    }
+
+    public float accumLerp = 0.45f;
+    float timeAccum = 0.0f;
+
+    IEnumerator LerpAccum(float acum)
+    {
+        timeAccum = accumLerp;
+
+        float dif1 = RotatonX - acum;
+        float dif2 = RotatonXX - acum;
+
+        while (timeAccum > 0.0f)
+        {
+            //RotatonX = Mathf.Lerp(RotatonX, RotatonX - acum, accumLerp);
+            //RotatonXX = Mathf.Lerp(RotatonXX, RotatonXX - acum, accumLerp);
+
+            RotatonX += dif1 * (Time.deltaTime * (1.0f / accumLerp));
+            RotatonXX += dif2 * (Time.deltaTime * (1.0f / accumLerp));
+
+            timeAccum -= Time.deltaTime;
+
+            yield return new WaitForSeconds(0.00f);
+        }
+
+        timeAccum = 0.0f;
+    }
+
+    public void UnAccum()
+    {
+        RotatonX -= accumY;
+        RotatonXX -= accumY;
+
+        //RotatonX = Mathf.Lerp(RotatonX, RotatonX - accumY, accumLerp);
+        //RotatonXX = Mathf.Lerp(RotatonXX, RotatonXX - accumY, accumLerp);
+
+        //StartCoroutine(LerpAccum(accumY));
+
+        accumY = 0.0f;
     }
 
     public void UpdateEulerY(float rotY)

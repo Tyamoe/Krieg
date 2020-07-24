@@ -10,6 +10,7 @@ public class PlayerStats
 {
     public PlayerController player;
     public MatchFeedController feedCtrl;
+    public TeamController teamCtrl;
 
     public float score = 0.0f;
 }
@@ -17,11 +18,12 @@ public class PlayerStats
 public class Team
 {
     public string Name = "";
+    public int ID = 0;
 
     public float Score = 0.0f;
 
     public int Count = 0;
-    public List<KeyValuePair<int, int>> Members = new List<KeyValuePair<int, int>>();
+    public List<KeyValuePair<int, int>> Members = new List<KeyValuePair<int, int>>(); // id, actor#
 }
 
 public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
@@ -55,7 +57,7 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
     MapController Map;
 
     // Team
-    Dictionary<int, Team> TeamCtrl = new Dictionary<int, Team>();
+    public Dictionary<int, Team> TeamCtrl = new Dictionary<int, Team>();
 
     int teamNeedsPlayer = -1;
 
@@ -69,7 +71,8 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
 
     public int playerCount = 1;
     int myId = -1;
-    float score = 0.0f;
+    [HideInInspector]
+    public float score = 0.0f;
 
     private bool Setup = false;
     bool Inited = false;
@@ -85,7 +88,7 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
     private float startTimer = 5.0f;
     private float matchTimer = 5.0f;
 
-    Dictionary<int, PlayerStats> Scores = new Dictionary<int, PlayerStats>();
+    public Dictionary<int, PlayerStats> Scores = new Dictionary<int, PlayerStats>();
 
     Dictionary<float, int> ScoreOrder = new Dictionary<float, int>();
 
@@ -215,7 +218,7 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
         Map = map.GetComponent<MapController>();
         Map.RespawnCtrl.ModeCtrl = this;
 
-        Transform spawn = Map.GetRandomSpawn();
+        Transform spawn = Map.GetRandomStartSpawn();
         GameObject playerObj = PhotonNetwork.Instantiate("Player", spawn.position, spawn.rotation);
 
         PlayerController playerCtrl = playerObj.GetComponent<PlayerController>();
@@ -229,6 +232,7 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
         Scores[myId] = new PlayerStats();
         Scores[myId].player = player;
         Scores[myId].feedCtrl = player.feedCtrl;
+        Scores[myId].teamCtrl = player.teamCtrl;
 
         GameObject modeUI = playerObj.transform.Find("PlayerUI").Find("InGame").Find("ModeUI").gameObject;
         ModeUI = modeUI;
@@ -288,11 +292,14 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
             teamNeedsPlayer = TeamCtrl.Count;
 
             TeamCtrl[teamNeedsPlayer] = new Team();
+            TeamCtrl[teamNeedsPlayer].ID = teamNeedsPlayer;
             TeamCtrl[teamNeedsPlayer].Name = "Team " + teamNeedsPlayer.ToString();
         }
 
         TeamCtrl[teamNeedsPlayer].Count++;
         TeamCtrl[teamNeedsPlayer].Members.Add(new KeyValuePair<int, int>(playerId, roomId));
+
+        player.teamCtrl.AddTeam(TeamCtrl[teamNeedsPlayer], this);
 
         photonView.RPC("SyncTeamsRPC", RpcTarget.Others, teamNeedsPlayer, TeamCtrl[teamNeedsPlayer].Count, playerId, roomId);
 
@@ -318,9 +325,12 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
         if(count == 1)
             TeamCtrl[team] = new Team();
 
+        TeamCtrl[team].ID = team;
         TeamCtrl[team].Count = count;
         TeamCtrl[team].Members.Add(new KeyValuePair<int, int>(playerId, roomId));
         TeamCtrl[team].Name = "Team " + team.ToString();
+
+        player.teamCtrl.AddTeam(TeamCtrl[team], this);
     }
 
     public Transform GetRespawn()
