@@ -840,6 +840,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a57402a698bdac94aa2618fe3c91b541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  matchListCtrl: {fileID: 547084286}
   SceneIndex: 1
 --- !u!4 &25259327
 Transform:
@@ -10113,6 +10114,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   matchListCtrl: {fileID: 547084286}
+  matchmakingCtrl: {fileID: 25259326}
   Highlights:
   - {fileID: 549125439}
   - {fileID: 1177777654}
@@ -12511,7 +12513,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
-  m_Pitch: 1
+  m_Pitch: 2.12
   Loop: 0
   Mute: 0
   Spatialize: 0

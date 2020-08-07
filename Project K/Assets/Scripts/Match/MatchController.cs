@@ -82,7 +82,7 @@ public class MatchController : MonoBehaviourPunCallbacks
 
             StartMatchText.text = "Starting In " + startTime.ToString("F0");
 
-            photonView.RPC("UpdateStartTimeRPC", RpcTarget.OthersBuffered, startTime);
+            photonView.RPC("UpdateStartTimeRPC", RpcTarget.Others, startTime);
         }
     }
 

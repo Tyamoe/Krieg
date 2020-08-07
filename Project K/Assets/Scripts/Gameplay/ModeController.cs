@@ -115,8 +115,8 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
 
         //if (photonView.IsMine)
         {
-            string msg = player.playerName + " Connected";
-            photonView.RPC("SendToFeed", RpcTarget.AllBuffered, msg);
+            //string msg = player.playerName + " Connected";
+            //photonView.RPC("SendToFeed", RpcTarget.AllBuffered, msg);
         }
     }
 
@@ -272,6 +272,9 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
         TextMeshProUGUI ts2 = modeUI.transform.Find("Team2Score").Find("ScoreText").GetComponent<TextMeshProUGUI>();
         Team2ScoreText = ts2;
         ts2.text = "0";
+
+        string msg = player.playerName + " Connected";
+        photonView.RPC("SendToFeed", RpcTarget.AllBuffered, msg);
 
         photonView.RPC("JoinTeam", RpcTarget.MasterClient, myId, PhotonNetwork.LocalPlayer.ActorNumber);
 

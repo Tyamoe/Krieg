@@ -18,6 +18,9 @@ public class HandIK : MonoBehaviour
     public float LeftIK = 0.45f;
     public float RightIK = 0.45f;
 
+    public float LeftRotationIK = 0.15f;
+    public float RightRotationIK = 0.15f;
+
     public void UpdateLeftIK(float value)
     {
         LeftIK = value;
@@ -39,16 +42,16 @@ public class HandIK : MonoBehaviour
                 if (rightHandObj != null)
                 {
                     playerAnim.SetIKPositionWeight(AvatarIKGoal.RightHand, RightIK);
-                    playerAnim.SetIKRotationWeight(AvatarIKGoal.RightHand, RightIK);
+                    //playerAnim.SetIKRotationWeight(AvatarIKGoal.RightHand, RightRotationIK);
                     playerAnim.SetIKPosition(AvatarIKGoal.RightHand, rightHandObj.position);
-                    playerAnim.SetIKRotation(AvatarIKGoal.RightHand, rightHandObj.rotation);
+                    //playerAnim.SetIKRotation(AvatarIKGoal.RightHand, rightHandObj.rotation);
                 }
                 if (leftHandObj != null)
                 {
                     playerAnim.SetIKPositionWeight(AvatarIKGoal.LeftHand, LeftIK);
-                    playerAnim.SetIKRotationWeight(AvatarIKGoal.LeftHand, LeftIK);
+                    //playerAnim.SetIKRotationWeight(AvatarIKGoal.LeftHand, LeftRotationIK);
                     playerAnim.SetIKPosition(AvatarIKGoal.LeftHand, leftHandObj.position);
-                    playerAnim.SetIKRotation(AvatarIKGoal.LeftHand, leftHandObj.rotation);
+                    //playerAnim.SetIKRotation(AvatarIKGoal.LeftHand, leftHandObj.rotation);
                 }
             }
             else

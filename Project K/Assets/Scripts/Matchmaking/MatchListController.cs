@@ -57,72 +57,37 @@ public class MatchListController : MonoBehaviourPunCallbacks
                 continue;
             }
             
+            GameObject listing = Instantiate(matchListPrefab, matchContainer);
+            MatchListing m = listing.GetComponent<MatchListing>();
+
+            string roomDetails = "";
+
+            if (room.CustomProperties.ContainsKey("Mode"))
             {
-                GameObject listing = Instantiate(matchListPrefab, matchContainer);
-                MatchListing m = listing.GetComponent<MatchListing>();
-
-                string roomDetails = "";
-
-                if (room.CustomProperties.ContainsKey("Mode"))
-                {
-                    roomDetails = (string)room.CustomProperties["Mode"];
-                }
-                else
-                {
-                    roomDetails = "*";
-                }
-
-                roomDetails += " on ";
-
-                if (room.CustomProperties.ContainsKey("Map"))
-                {
-                    roomDetails += (string)room.CustomProperties["Map"];
-                }
-                else
-                {
-                    roomDetails += "*";
-                }
-
-                m.UpdateListing(room.Name, room.PlayerCount, room.MaxPlayers, roomDetails);
-
-                matchListing.Add(room.Name, listing);
-                matchList.Add(room);
-
-                Debug.Log("Custom: " + room.CustomProperties.ToStringFull());
-
-                StartCoroutine(DoSomething(room, m));
+                roomDetails = (string)room.CustomProperties["Mode"];
             }
+            else
+            {
+                roomDetails = "*";
+            }
+
+            roomDetails += " on ";
+
+            if (room.CustomProperties.ContainsKey("Map"))
+            {
+                roomDetails += (string)room.CustomProperties["Map"];
+            }
+            else
+            {
+                roomDetails += "*";
+            }
+
+            m.UpdateListing(room.Name, room.PlayerCount, room.MaxPlayers, roomDetails);
+
+            matchListing.Add(room.Name, listing);
+            matchList.Add(room);
+
+            Debug.Log("Custom: " + room.CustomProperties.ToStringFull());
         }
-    }
-
-    IEnumerator DoSomething(RoomInfo room, MatchListing m)
-    {
-        yield return new WaitForSeconds(1.5f);
-
-        string roomDetails = "";
-
-        if (room.CustomProperties.ContainsKey("Mode"))
-        {
-            roomDetails = (string)room.CustomProperties["Mode"];
-        }
-        else
-        {
-            roomDetails = "*";
-        }
-
-        roomDetails += " on ";
-
-        if (room.CustomProperties.ContainsKey("Map"))
-        {
-            roomDetails += (string)room.CustomProperties["Map"];
-        }
-        else
-        {
-            roomDetails += "*";
-        }
-
-        m.UpdateListing(room.Name, room.PlayerCount, room.MaxPlayers, roomDetails);
-
-        Debug.Log("Custom: " + room.CustomProperties.ToStringFull());
     }
 }

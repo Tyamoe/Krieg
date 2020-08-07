@@ -8,7 +8,9 @@ using UnityEngine.UI;
 public class MainMenuController : MonoBehaviourPunCallbacks
 {
     public MatchListController matchListCtrl;
+    public MatchmakingController matchmakingCtrl;
 
+    [Space]
     public GameObject[] Highlights;
     public bool Connected = false;
 
@@ -20,6 +22,7 @@ public class MainMenuController : MonoBehaviourPunCallbacks
     public GameObject SettingsPanel;
     public GameObject ProfilePanel;
 
+    [Space]
     public GameObject playerListingPrefab;
     public Transform playerListingContainer;
 
@@ -55,7 +58,7 @@ public class MainMenuController : MonoBehaviourPunCallbacks
 
     public override void OnDisconnected(DisconnectCause cause)
     {
-        Debug.Log("MainMenuController OnDisconnected");
+        Debug.Log("MainMenuController OnDisconnected " + cause.ToString());
 
         Connected = false;
         ConnectionStatus.color = Color.white;
@@ -64,11 +67,7 @@ public class MainMenuController : MonoBehaviourPunCallbacks
     public void Matchmaking()
     {
         Game.PlayLow();
-
-        string roomName = "Room1234";
-
-        RoomOptions roomOpt = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10 };
-        PhotonNetwork.JoinOrCreateRoom(roomName, roomOpt, new TypedLobby(null, LobbyType.Default));
+        matchmakingCtrl.SearchAndJoin();
     }
 
     public void LogOut()

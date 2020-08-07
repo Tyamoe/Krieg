@@ -64,10 +64,12 @@ public class Game : MonoBehaviour
         _instance = this;
         DontDestroyOnLoad(this.gameObject);
 
-        PhotonNetwork.SendRate = 64;
-        PhotonNetwork.SerializationRate = 64;
+        PhotonNetwork.SendRate = 42;
+        PhotonNetwork.SerializationRate = 42;
 
         audioSource = GetComponent<AudioSource>();
+
+        WebGLInput.captureAllKeyboardInput = true;
 
         buttonHighSFX = ButtonHighSFX;
         buttonLowSFX = ButtonLowSFX;

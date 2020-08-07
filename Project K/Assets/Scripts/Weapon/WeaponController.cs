@@ -192,6 +192,7 @@ public class WeaponController : MonoBehaviour
 
     private Vector3 locPos;
     private Vector3 locPos1;
+    private Vector3 locPos2;
 
     private bool reloadAds = false;
 
@@ -212,6 +213,7 @@ public class WeaponController : MonoBehaviour
     void Awake()
     {
         locPos1 = WeaponPivotHidden.localPosition;
+        locPos2 = GunMagazine.localPosition;
     }
 
     void Start()
@@ -249,6 +251,10 @@ public class WeaponController : MonoBehaviour
         UpdateHipfireSpread();
 
         Started = true;
+
+        WeaponPivotHidden.localPosition = locPos1;
+        player.FPSCamera.fieldOfView = 75.0f;
+        WeaponPivot.localEulerAngles = new Vector3(0.0f, 355.0f, 0.0f);
     }
     
     void Update()
@@ -297,6 +303,7 @@ public class WeaponController : MonoBehaviour
 
                 //tempReload = GunMagazine;
                 GunMagazine.parent = LeftHand;
+                GunMagazine.localPosition = Vector3.zero;
 
                 playerAnim.SetFloat("ReloadSpeed", 1.0f / ReloadSpeed);
 
@@ -304,10 +311,10 @@ public class WeaponController : MonoBehaviour
 
                 player.playerReload = true;
 
-                player.handIK.LeftIK = 0.0f;
+                player.handIK.LeftIK = 0.3f;
                 if (PhotonNetwork.IsConnected)
                 {
-                    photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, 0.0f);
+                    photonView.RPC("UpdateLeftIK", RpcTarget.Others, 0.0f);
                 }
             }
         }
@@ -317,15 +324,19 @@ public class WeaponController : MonoBehaviour
         {
             reloadTime -= Time.deltaTime;
             playerAnim.SetFloat("ReloadTime", reloadTime);
-            
-            if(reloadTime <= 0.0f)
+
+            float ik = mapToRange(reloadTime - Time.deltaTime, 0.0f, ReloadSpeed, 0.0f, 0.3f);
+            player.handIK.LeftIK = ik;
+
+            if (reloadTime <= 0.0f)
             {
                 reloading = false;
                 playerAnim.SetFloat("ReloadTime", -1.0f);
                 reloadTime = 0.0f;
 
                 GunMagazine.parent = WeaponPivot;
-                GunMagazine.localPosition = locPos;// new Vector3(0.0f, 0.1f, 0.0f);
+                //GunMagazine.localPosition = locPos;
+                GunMagazine.localPosition = locPos2;
                 GunMagazine.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
                 GunMagazine.localScale = new Vector3(1.0f, 1.0f, 1.0f);
                 //GunMagazine = tempReload;
@@ -353,7 +364,7 @@ public class WeaponController : MonoBehaviour
                 player.handIK.LeftIK = 0.45f;
                 if (PhotonNetwork.IsConnected)
                 {
-                    photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, 0.45f);
+                    photonView.RPC("UpdateLeftIK", RpcTarget.Others, 0.45f);
                 }
             }
         }
@@ -409,7 +420,7 @@ public class WeaponController : MonoBehaviour
         // Update ADS Sight Line
         if ((Input.GetKey(ADSKey) && playerControl || ADSToggled) && !reloading)
         {
-            if (adsDone)
+            if (adsDone && ads)
             {
                 //CameraPivot.position = SightPivot.position;
                 WeaponPivotHidden.localPosition = ADSPos.localPosition;
@@ -535,6 +546,11 @@ public class WeaponController : MonoBehaviour
             {
                 canShoot = false;
 
+                player.handIK.LeftIK = 0.44f;
+                player.handIK.RightIK = 0.435f;
+                //WeaponPivot.localEulerAngles = new Vector3(0.0f, -4.0f, -0.15f);
+                WeaponRotation += new Vector3(-0.1f, 0.0f, -0.1f);
+
                 MagSize--;
                 UpdateWeaponUI();
 
@@ -543,7 +559,7 @@ public class WeaponController : MonoBehaviour
                     triggerReload = true;
                 }
 
-                Vector3 target = Vector3.zero;
+                //Vector3 target = Vector3.zero;
                 Vector3 dir = Vector3.zero;
 
                 if (ads && adsDone)
@@ -561,7 +577,7 @@ public class WeaponController : MonoBehaviour
 
                     dir = Vector3.Normalize(player.FPSCamera.transform.forward + RecoilV);
                 }
-                target = player.FPSCamera.transform.position + (dir * 10000.0f);
+                //target = player.FPSCamera.transform.position + (dir * 10000.0f);
 
                 //RaycastHit[] hits = Physics.RaycastAll(player.FPSCamera.transform.position, dir, 1000.0f);
                 RaycastHit hit;
@@ -612,7 +628,7 @@ public class WeaponController : MonoBehaviour
                 }
 
                 if (PhotonNetwork.IsConnected)
-                    GetComponent<PhotonView>().RPC("PlayFireSFX", RpcTarget.OthersBuffered, transform.position);
+                    GetComponent<PhotonView>().RPC("PlayFireSFX", RpcTarget.Others, transform.position);
 
                 float magx = RecoilMagnitudeX;
                 float magy = RecoilMagnitudeY;
@@ -696,10 +712,24 @@ public class WeaponController : MonoBehaviour
                     currFireCooldown = fireCooldown;
                     canShoot = true;
                 }
+                else if(currFireCooldown <= fireCooldown / 2.0f)
+                {
+                    player.handIK.LeftIK = 0.45f;
+                    player.handIK.RightIK = 0.45f;
+                    //WeaponPivot.localEulerAngles = new Vector3(0.0f, -4.0f, 0.0f);
+                    WeaponRotation -= new Vector3(-0.15f, 0.0f, -0.15f);
+                }
             }
         }
         else if(!recoilReset && playerControl)   // Recoil Reset Timers
         {
+            if(!reloading)
+            {
+                player.handIK.LeftIK = 0.45f;
+                player.handIK.RightIK = 0.45f;
+                WeaponPivot.localEulerAngles = new Vector3(0.0f, -4.0f, 0.0f);
+            }
+
             recoilResetTimer -= Time.deltaTime;
             if(recoilResetTimer <= 0.0f)
             {

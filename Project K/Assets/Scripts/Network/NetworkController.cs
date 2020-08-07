@@ -78,7 +78,15 @@ public class NetworkController : MonoBehaviourPunCallbacks
     IEnumerator InitializePlayer()
     {
         yield return new WaitForSeconds(0.33f);
+        //PhotonNetwork.ConnectUsingSettings();
+        //PhotonNetwork.ConnectToRegion("us");
+
+        PhotonNetwork.PhotonServerSettings.AppSettings.FixedRegion = "us";
         PhotonNetwork.ConnectUsingSettings();
+    }
+    public override void OnConnected()
+    {
+        Debug.Log("OnConnected");
     }
 
     public void ConnectToMasterServer()
@@ -123,7 +131,7 @@ public class NetworkController : MonoBehaviourPunCallbacks
         PhotonNetwork.JoinLobby();
 
         Debug.Log("NetworkController OnConnectedToMaster");
-        Debug.Log("Connected on " + PhotonNetwork.CloudRegion + " : " + PhotonNetwork.PhotonServerSettings.ToString());
+        //Debug.Log("Connected on " + PhotonNetwork.CloudRegion + " : " + PhotonNetwork.PhotonServerSettings.ToString());
 
         Game.LeftMatch = false;
     }

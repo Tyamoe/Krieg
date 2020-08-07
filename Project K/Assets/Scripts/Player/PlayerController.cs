@@ -507,6 +507,8 @@ public class PlayerController : MonoBehaviour
         }
         if (Input.GetKeyUp(Keybinds[KeyActions.Scoreboard]))
         {
+            toggleADS = true;
+            toggleCrouch = true;
             Scoreboard.SetActive(false);
         }
 
@@ -864,7 +866,7 @@ public class PlayerController : MonoBehaviour
                 {
                     healthTimer = 0.0f;
                     if (PhotonNetwork.IsConnected)
-                        photonView.RPC("ChangeHealthRPC", RpcTarget.AllBuffered, -15, Vector3.zero, -1, -1);
+                        photonView.RPC("ChangeHealthRPC", RpcTarget.All, -15, Vector3.zero, -1, -1);
                 }
             }
             else
@@ -874,7 +876,7 @@ public class PlayerController : MonoBehaviour
                 {
                     healthTimer = 0.0f;
                     if (PhotonNetwork.IsConnected)
-                        photonView.RPC("ChangeHealthRPC", RpcTarget.AllBuffered, -modeCtrl.RegenAmount, Vector3.zero, -1, -1);
+                        photonView.RPC("ChangeHealthRPC", RpcTarget.All, -modeCtrl.RegenAmount, Vector3.zero, -1, -1);
                 }
             }
         }
@@ -990,11 +992,11 @@ public class PlayerController : MonoBehaviour
         handIK.LeftIK = 0.6f;
         if (PhotonNetwork.IsConnected)
         {
-            photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, 0.6f);
+            photonView.RPC("UpdateLeftIK", RpcTarget.Others, 0.6f);
         }
 
         if (PhotonNetwork.IsConnected)
-            GetComponent<PhotonView>().RPC("PreWeaponSwap", RpcTarget.OthersBuffered);
+            GetComponent<PhotonView>().RPC("PreWeaponSwap", RpcTarget.Others);
 
         yield return new WaitForSeconds(swapTime);
 
@@ -1008,7 +1010,7 @@ public class PlayerController : MonoBehaviour
         handIK.LeftIK = ik;
         if (PhotonNetwork.IsConnected)
         {
-            photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, ik);
+            photonView.RPC("UpdateLeftIK", RpcTarget.Others, ik);
         }
 
         currWeapon = i;
@@ -1035,7 +1037,7 @@ public class PlayerController : MonoBehaviour
                 handIK.LeftIK = 0.5f;
                 if (PhotonNetwork.IsConnected)
                 {
-                    photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, 0.5f);
+                    photonView.RPC("UpdateLeftIK", RpcTarget.Others, 0.5f);
                 }
             }
 
@@ -1068,7 +1070,7 @@ public class PlayerController : MonoBehaviour
                 handIK.LeftIK = 0.45f;
                 if(PhotonNetwork.IsConnected)
                 {
-                    photonView.RPC("UpdateLeftIK", RpcTarget.OthersBuffered, 0.45f);
+                    photonView.RPC("UpdateLeftIK", RpcTarget.Others, 0.45f);
                 }
             }
 
