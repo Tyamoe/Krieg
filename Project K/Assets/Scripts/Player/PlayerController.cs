@@ -263,8 +263,12 @@ public class PlayerController : MonoBehaviour
     public int Ping = -1;
 
     // Minimap
+    private RawImage minimapImage;
     private RectTransform minimapCtrl;
     private RectTransform minimapMeCtrl;
+
+    public List<RectTransform> minimapIndicators;
+
     private float minimapTimer = 1.0f;
 
     // Health
@@ -455,7 +459,11 @@ public class PlayerController : MonoBehaviour
         teamCtrl = Scoreboard.GetComponentInChildren<TeamController>();
 
         minimapCtrl = InGameUI.transform.Find("Minimap").Find("MinimapImage").GetComponent<RectTransform>();
+        minimapImage = minimapCtrl.GetComponent<RawImage>();
         minimapMeCtrl = InGameUI.transform.Find("Minimap").Find("Me").GetComponent<RectTransform>();
+
+        minimapIndicators = new List<RectTransform>(minimapCtrl.GetComponentsInChildren<RectTransform>());
+        minimapIndicators.RemoveAt(0);
 
         HealthBar = InGameUI.transform.Find("HealthBar").GetComponent<Scrollbar>();
         HealthBarStatus = HealthBar.transform.Find("Sliding Area").Find("HealthBarStatus").GetComponent<Image>();
@@ -1084,6 +1092,34 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void UpdateMinimap(Texture minimap)
+    {
+        minimapImage.texture = minimap;
+    }
+
+    public void UpdateMinimap(List<Vector2> pos)
+    {
+        int j = pos.Count;
+        for(int i = 0; i < minimapIndicators.Count; i++)
+        {
+            if(i < j)
+            {
+                minimapIndicators[i].localPosition = new Vector3(-pos[i].x, -pos[i].y, 0.0f);
+            }
+            else
+            {
+                minimapIndicators[i].localPosition = new Vector3(2000.0f, 0.0f, 0.0f);
+            }
+        }
+
+        /*int i = 0;
+        foreach(Vector2 v in positions)
+        {
+            minimapIndicators[i].localPosition = new Vector3(v.x, v.y, 0.0f) * minimapCtrl.localScale.x;
+            i++;
+        }*/
+    }
+
     [PunRPC]
     void UpdateLeftIK(float val)
     {
@@ -1178,7 +1214,7 @@ public class PlayerController : MonoBehaviour
                 return;
             }
 
-            DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
+            DebugText.text = "Health: " + Health + " Ping: " + Ping + " FPS: " + (1.0f / Time.deltaTime);
 
             audioSource.PlayOneShot(HitSFX);
 
@@ -1211,7 +1247,7 @@ public class PlayerController : MonoBehaviour
                 }
             }
 
-            DebugText.text = "Health: " + Health + " Ping: " + PhotonNetwork.GetPing() + " FPS: " + (1.0f / Time.deltaTime);
+            DebugText.text = "Health: " + Health + " Ping: " + Ping + " FPS: " + (1.0f / Time.deltaTime);
         }
 
         return;
@@ -1243,7 +1279,7 @@ public class PlayerController : MonoBehaviour
     [PunRPC]
     private void Respawn(Vector3 pos, Quaternion rot)
     {
-        Debug.Log("Resoawn: " + photonView.ViewID + " | " + pos.ToString());
+        Debug.Log("Respawn: " + photonView.ViewID + " | " + pos.ToString());
         transform.position = pos;
         transform.rotation = rot;
 
@@ -1258,6 +1294,8 @@ public class PlayerController : MonoBehaviour
                 weapon.ResetAmmo();
             }
             weapons.weapons[currWeapon].UpdateWeaponUI();
+
+            HealthBarStatus.color = Color.green;
         }
     }
 

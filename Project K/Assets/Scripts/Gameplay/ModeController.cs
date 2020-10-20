@@ -88,6 +88,8 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
     private float startTimer = 5.0f;
     private float matchTimer = 5.0f;
 
+    private int syncCount = 0;
+
     public Dictionary<int, PlayerStats> Scores = new Dictionary<int, PlayerStats>();
 
     Dictionary<float, int> ScoreOrder = new Dictionary<float, int>();
@@ -123,6 +125,8 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
     // 4
     void Update()
     {
+        syncCount++;
+
         if (Started)
         {
             matchTimer -= Time.deltaTime;
@@ -195,7 +199,7 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
             Setup = true;
         }
 
-        if(Input.GetKeyDown(KeyCode.M))
+        if (Input.GetKeyDown(KeyCode.M))
         {
             foreach(KeyValuePair<int, PlayerStats> p in Scores)
             {
@@ -403,6 +407,7 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
+        //Debug.Log("Boob");
         if (!Inited) return;
 
         if (stream.IsWriting)
@@ -427,6 +432,19 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
 
             score1 = s1;
             score2 = s2;
+
+            if(syncCount % 6 == 0)
+            {
+                stream.SendNext(true);
+
+                //Debug.Log("Hey " + syncCount);
+
+                SyncMinimap();
+            }
+            else
+            {
+                stream.SendNext(false);
+            }
         }
         else
         {
@@ -437,6 +455,13 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
 
             score1 = (float)stream.ReceiveNext();
             score2 = (float)stream.ReceiveNext();
+
+            bool b = (bool)stream.ReceiveNext();
+
+            if (b)
+            {
+                SyncMinimap();
+            }
         }
 
         if (PhotonNetwork.CurrentRoom.PlayerCount > 1)
@@ -495,6 +520,21 @@ public class ModeController : MonoBehaviourPunCallbacks, IPunObservable
                 }
             }
         }
+    }
+
+    void SyncMinimap()
+    {
+        List<Vector2> pos = new List<Vector2>();
+
+        foreach(KeyValuePair<int, PlayerStats> p in Scores)
+        {
+            if(p.Key != myId)
+                pos.Add(Map.GetMinimapPos(p.Value.player.transform.position));
+        }
+
+        player.UpdateMinimap(pos);
+
+        //Debug.Log("Bye " + pos.Count);
     }
 
     [PunRPC]

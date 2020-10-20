@@ -9087,7 +9087,7 @@ GameObject:
   - component: {fileID: 1014984926855451356}
   - component: {fileID: 2103750406074176545}
   m_Layer: 8
-  m_Name: Player
+  m_Name: PlayerBackup
   m_TagString: Self
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9144,10 +9144,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   photonView: {fileID: 2442263730038043351}
-  weapons: {fileID: 5669428924288398470}
+  playerName: 
+  StartWeapon: 0
+  PlayerSpeed: 20
+  PlayerSprintSpeed: 5
+  PlayerJumpHeight: 1.8
+  PlayerClimbSpeed: 0.8
+  PlayerGravity: {x: 0, y: -6, z: 0}
+  audioSource: {fileID: 8178952661241506943}
+  WalkingSFX: {fileID: 0}
+  HitSFX: {fileID: 0}
+  HitDeadSFX: {fileID: 0}
+  LowHealthSFX: {fileID: 0}
   cam: {fileID: 3242447438036337969}
+  weapons: {fileID: 5669428924288398470}
   settingsFuncs: {fileID: 1836202393039775057}
+  modeCtrl: {fileID: 0}
+  mapCtrl: {fileID: 0}
+  FPSCamera: {fileID: 5372648079163726693}
+  EnvCamera: {fileID: 6450776792028511750}
   playerAnim: {fileID: 671543982828047886}
+  PlayerUI: {fileID: 5685340311583369212}
   Meshes:
   - {fileID: 5106738882930334096}
   - {fileID: 6248980882853411377}
@@ -9156,31 +9173,23 @@ MonoBehaviour:
   - {fileID: 4610634173818128875}
   - {fileID: 1239448047116384933}
   - {fileID: 216262327143553322}
-  FPSCamera: {fileID: 5372648079163726693}
-  EnvCamera: {fileID: 6450776792028511750}
-  PlayerUI: {fileID: 5685340311583369212}
-  Health: 100
-  audioSource: {fileID: 8178952661241506943}
+  PlayerLocked: 0
+  PlayerControl: 1
+  playerADS: 0
+  playerReload: 0
   Crosshair: {fileID: 2584343577450908755}
   Hitmarker: {fileID: 0}
+  teamCtrl: {fileID: 0}
+  feedCtrl: {fileID: 0}
   AmmoText: {fileID: 0}
   DebugText: {fileID: 0}
-  PlayerSpeed: 20
-  PlayerSprintSpeed: 5
-  PlayerJumpHeight: 1.8
-  PlayerClimbSpeed: 0.8
-  PlayerGravity: {x: 0, y: -6, z: 0}
-  PlayerVelocity: {x: 0, y: 0, z: 0}
-  WeaponHeld: 1
   handIK: {fileID: 0}
+  Ping: -1
   Crouching: 0
   Jumping: 0
   Climbing: 0
   currLadder: {fileID: 0}
-  PlayerControl: 1
-  playerADS: 0
-  playerReload: 0
-  modeCtrl: {fileID: 0}
+  groundThreshold: -0.1
 --- !u!95 &671543982828047886
 Animator:
   serializedVersion: 3
@@ -9220,6 +9229,8 @@ MonoBehaviour:
   lookObj: {fileID: 0}
   LeftIK: 0.45
   RightIK: 0.45
+  LeftRotationIK: 0.15
+  RightRotationIK: 0.15
 --- !u!114 &2442263730038043351
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13053,6 +13064,8 @@ MonoBehaviour:
   lookObj: {fileID: 0}
   LeftIK: 0.45
   RightIK: 0.45
+  LeftRotationIK: 0.15
+  RightRotationIK: 0.15
 --- !u!1 &3351021115181584949
 GameObject:
   m_ObjectHideFlags: 0
@@ -17726,6 +17739,7 @@ MonoBehaviour:
   WeaponTiltX: 0
   ADSMultiplierX: 1
   ADSMultiplierY: 1
+  accumLerp: 0.45
 --- !u!1 &4534310091659868527
 GameObject:
   m_ObjectHideFlags: 0
@@ -28493,18 +28507,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   photonView: {fileID: 2442263730038043351}
-  WeaponPivot: {fileID: 7074404807747491173}
-  WeaponPivotHidden: {fileID: 8474079173119993949}
-  CameraPivot: {fileID: 6136490159717046154}
-  SightPivot: {fileID: 5672230625774708919}
-  LeftHand: {fileID: 9069778027811190780}
-  GunMagazine: {fileID: 355921563939716006}
-  Grip: {fileID: 6418133401105919482}
-  Trigger: {fileID: 6418133401193178931}
-  ForwardOffset: 5
-  forwardOffset: 0.1
+  weaponClass: 0
+  semiAuto: 0
   RPM: 600
   Damage: 25
+  IgnoreMask:
+    serializedVersion: 2
+    m_Bits: 0
+  ShotDelay: 0
   RecoilMagnitudeX: 0.237
   RecoilMagnitudeY: 58
   RecoilDeltaX: -1
@@ -28513,23 +28523,32 @@ MonoBehaviour:
   RecoilVelocityY: 0.88
   RecoilReset: 0.7
   RecoilLerp: 1.1
-  toggleADS: 0
-  ADSForwardLean: 1.4
-  ADSDownwardLean: 0.35
   ADSSpeed: 0.25
+  toggleADS: 0
+  ADSPos: {fileID: 0}
+  ForwardOffset: 5
   HipfireSpreadX: 0.25
   HipfireSpreadY: 0.25
+  ReloadSpeed: 1.6
   MagSize: 30
   ClipCount: 4
-  ReloadSpeed: 1.6
-  cameraCtrl: {fileID: 3242447438036337969}
   player: {fileID: 1524546699874572503}
+  bot: {fileID: 0}
+  cameraCtrl: {fileID: 3242447438036337969}
   playerAnim: {fileID: 671543982828047886}
+  WeaponPivot: {fileID: 7074404807747491173}
+  WeaponPivotHidden: {fileID: 8474079173119993949}
+  CameraPivot: {fileID: 6136490159717046154}
+  LeftHand: {fileID: 9069778027811190780}
+  GunMagazine: {fileID: 355921563939716006}
+  BarrelExit: {fileID: 0}
+  SightPivot: {fileID: 5672230625774708919}
+  Grip: {fileID: 6418133401105919482}
+  Trigger: {fileID: 6418133401193178931}
   audioSource: {fileID: 8178952661241506943}
   FireSFX: {fileID: 8300000, guid: 2781182fc43a0614bbb533d3e937bb9c, type: 3}
   FireHitSFX: {fileID: 8300000, guid: 08ee8c102ea72144aacf637fa4b3bac3, type: 3}
   NoAmmoSFX: {fileID: 8300000, guid: 82f7150a73bdf4c44aa84fab65a33f75, type: 3}
-  AmmoText: {fileID: 0}
   MuzzleFlash: {fileID: 31295446539893333, guid: d72e40def8d2f974a89a89ea4b871ee3,
     type: 3}
   TracerPrefab: {fileID: 6255141788256227024, guid: ed6be96273db107418bd94e7ef546a8f,
@@ -30605,18 +30624,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   photonView: {fileID: 2442263730038043351}
-  WeaponPivot: {fileID: 4225141343904114413}
-  WeaponPivotHidden: {fileID: 8542542262995663239}
-  CameraPivot: {fileID: 6136490159717046154}
-  SightPivot: {fileID: 2383984654891848913}
-  LeftHand: {fileID: 9069778027811190780}
-  GunMagazine: {fileID: 910675643890072363}
-  Grip: {fileID: 3702655042474894921}
-  Trigger: {fileID: 4307579802161992203}
-  ForwardOffset: 5
-  forwardOffset: 0.1
+  weaponClass: 0
+  semiAuto: 0
   RPM: 600
   Damage: 25
+  IgnoreMask:
+    serializedVersion: 2
+    m_Bits: 0
+  ShotDelay: 0
   RecoilMagnitudeX: 0.237
   RecoilMagnitudeY: 58
   RecoilDeltaX: -1
@@ -30625,23 +30640,32 @@ MonoBehaviour:
   RecoilVelocityY: 0.88
   RecoilReset: 0.7
   RecoilLerp: 1.1
-  toggleADS: 0
-  ADSForwardLean: 1.4
-  ADSDownwardLean: 0.35
   ADSSpeed: 0.25
+  toggleADS: 0
+  ADSPos: {fileID: 0}
+  ForwardOffset: 5
   HipfireSpreadX: 0.25
   HipfireSpreadY: 0.25
+  ReloadSpeed: 1.6
   MagSize: 30
   ClipCount: 4
-  ReloadSpeed: 1.6
-  cameraCtrl: {fileID: 3242447438036337969}
   player: {fileID: 1524546699874572503}
+  bot: {fileID: 0}
+  cameraCtrl: {fileID: 3242447438036337969}
   playerAnim: {fileID: 671543982828047886}
+  WeaponPivot: {fileID: 4225141343904114413}
+  WeaponPivotHidden: {fileID: 8542542262995663239}
+  CameraPivot: {fileID: 6136490159717046154}
+  LeftHand: {fileID: 9069778027811190780}
+  GunMagazine: {fileID: 910675643890072363}
+  BarrelExit: {fileID: 0}
+  SightPivot: {fileID: 2383984654891848913}
+  Grip: {fileID: 3702655042474894921}
+  Trigger: {fileID: 4307579802161992203}
   audioSource: {fileID: 8178952661241506943}
   FireSFX: {fileID: 8300000, guid: 2781182fc43a0614bbb533d3e937bb9c, type: 3}
   FireHitSFX: {fileID: 8300000, guid: 08ee8c102ea72144aacf637fa4b3bac3, type: 3}
   NoAmmoSFX: {fileID: 8300000, guid: 82f7150a73bdf4c44aa84fab65a33f75, type: 3}
-  AmmoText: {fileID: 0}
   MuzzleFlash: {fileID: 31295446539893333, guid: d72e40def8d2f974a89a89ea4b871ee3,
     type: 3}
   TracerPrefab: {fileID: 6255141788256227024, guid: ed6be96273db107418bd94e7ef546a8f,
@@ -33989,18 +34013,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   photonView: {fileID: 2442263730038043351}
-  WeaponPivot: {fileID: 8398492955079445633}
-  WeaponPivotHidden: {fileID: 8474079173119993949}
-  CameraPivot: {fileID: 6136490159717046154}
-  SightPivot: {fileID: 2955322882871831595}
-  LeftHand: {fileID: 9069778027811190780}
-  GunMagazine: {fileID: 5406600662246772063}
-  Grip: {fileID: 0}
-  Trigger: {fileID: 0}
-  ForwardOffset: 0
-  forwardOffset: 0.1
+  weaponClass: 0
+  semiAuto: 0
   RPM: 600
   Damage: 25
+  IgnoreMask:
+    serializedVersion: 2
+    m_Bits: 0
+  ShotDelay: 0
   RecoilMagnitudeX: 0.237
   RecoilMagnitudeY: 58
   RecoilDeltaX: -1
@@ -34009,23 +34029,32 @@ MonoBehaviour:
   RecoilVelocityY: 0.88
   RecoilReset: 0.7
   RecoilLerp: 1.1
-  toggleADS: 0
-  ADSForwardLean: 1.4
-  ADSDownwardLean: 0.35
   ADSSpeed: 0.25
+  toggleADS: 0
+  ADSPos: {fileID: 0}
+  ForwardOffset: 0
   HipfireSpreadX: 0.25
   HipfireSpreadY: 0.25
+  ReloadSpeed: 1.6
   MagSize: 30
   ClipCount: 4
-  ReloadSpeed: 1.6
-  cameraCtrl: {fileID: 3242447438036337969}
   player: {fileID: 1524546699874572503}
+  bot: {fileID: 0}
+  cameraCtrl: {fileID: 3242447438036337969}
   playerAnim: {fileID: 671543982828047886}
+  WeaponPivot: {fileID: 8398492955079445633}
+  WeaponPivotHidden: {fileID: 8474079173119993949}
+  CameraPivot: {fileID: 6136490159717046154}
+  LeftHand: {fileID: 9069778027811190780}
+  GunMagazine: {fileID: 5406600662246772063}
+  BarrelExit: {fileID: 0}
+  SightPivot: {fileID: 2955322882871831595}
+  Grip: {fileID: 0}
+  Trigger: {fileID: 0}
   audioSource: {fileID: 0}
   FireSFX: {fileID: 0}
   FireHitSFX: {fileID: 0}
   NoAmmoSFX: {fileID: 0}
-  AmmoText: {fileID: 0}
   MuzzleFlash: {fileID: 31295446539893333, guid: d72e40def8d2f974a89a89ea4b871ee3,
     type: 3}
   TracerPrefab: {fileID: 0}

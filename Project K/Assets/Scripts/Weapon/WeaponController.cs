@@ -83,6 +83,7 @@ public class WeaponController : MonoBehaviour
 
     [Header("Controller References")]
     public PlayerController player;
+    public BotController bot;
     public CameraController cameraCtrl;
     public Animator playerAnim;
 
@@ -119,6 +120,9 @@ public class WeaponController : MonoBehaviour
     private bool Active = false;
 
     private bool Started = false;
+
+    // Bot
+    private bool isBot = false;
 
     // Private References
     private RawImage Hitmarker;
@@ -212,6 +216,11 @@ public class WeaponController : MonoBehaviour
 
     void Awake()
     {
+        if(!player && bot)
+        {
+            isBot = true;
+        }
+
         locPos1 = WeaponPivotHidden.localPosition;
         locPos2 = GunMagazine.localPosition;
     }
@@ -584,34 +593,29 @@ public class WeaponController : MonoBehaviour
                 if (Physics.Raycast(player.FPSCamera.transform.position, dir, out hit, 1000.0f, ~IgnoreMask))
                 {
                     PlayerController enemy = null;
+                    float multiplier = 0.0f;
+                    int addDamage = 0;
 
-                    enemy = hit.transform.gameObject.GetComponent<PlayerController>();
-                    if(!enemy)
+                    PlayerCollider enemyCol = hit.transform.gameObject.GetComponent<PlayerCollider>();
+                    if (enemyCol)
                     {
-                        PlayerCollider enemyCol = hit.transform.gameObject.GetComponent<PlayerCollider>();
-                        if(enemyCol)
-                        {
-                            enemy = enemyCol.player;
-                        }
+                        enemy = enemyCol.player;
+                        multiplier = enemyCol.multiplier - 1.0f;
+                        addDamage = Mathf.CeilToInt(multiplier * (float)Damage);
                     }
 
                     if (enemy && enemy != player)
                     {
                         Color c = Color.green;
-                        Collider coll = hit.collider;
-                        var boxColl = coll as BoxCollider;
-                        if (boxColl != null)
+                        if(multiplier > 0.0f)
                         {
-                            if(boxColl.size.magnitude < 5.0f)
-                            {
-                                c = Color.blue;
-                            }
+                            c = Color.blue;
                         }
 
                         audioSource.PlayOneShot(FireHitSFX);
 
                         if (PhotonNetwork.IsConnected)
-                            enemy.gameObject.GetPhotonView().RPC("ChangeHealthRPC", RpcTarget.All, Damage, player.FPSCamera.transform.forward, player.photonView.ViewID, enemy.photonView.ViewID);
+                            enemy.gameObject.GetPhotonView().RPC("ChangeHealthRPC", RpcTarget.All, (Damage + addDamage), player.FPSCamera.transform.forward, player.photonView.ViewID, enemy.photonView.ViewID);
 
                         IEnumerator coroutine;
                         coroutine = ShowHitmarker(0.45f, c);
@@ -634,7 +638,7 @@ public class WeaponController : MonoBehaviour
                 float magy = RecoilMagnitudeY;
 
                 // ADS Recoil Modifiers
-                if (!HeldDown)
+                if (!HeldDown && !semiAuto)
                 {
                     magx *= 0.85f;
                     magy *= 0.85f;

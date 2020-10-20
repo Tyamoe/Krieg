@@ -29,7 +29,7 @@ public class MatchmakingController : MonoBehaviourPunCallbacks
         {
             foreach(RoomInfo room in matchListCtrl.matchList)
             {
-                if(room.PlayerCount < 0)
+                if(room.PlayerCount < room.MaxPlayers)
                 {
                     joined = true;
                     PhotonNetwork.JoinRoom(room.Name);

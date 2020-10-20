@@ -41,16 +41,16 @@ public class MapController : MonoBehaviourPunCallbacks
 
     public Vector2 GetMinimapPos(Vector3 playerPos)
     {
-        float x = mapToRange(playerPos.x, MapSizeX / -2.0f, MapSizeX / 2.0f, MinimapSizeX / -2.0f, MinimapSizeX / 2.0f);
-        float y = mapToRange(playerPos.z, MapSizeY / -2.0f, MapSizeY / 2.0f, MinimapSizeY / -2.0f, MinimapSizeY / 2.0f);
+        //float x = mapToRange(playerPos.x, MapSizeX / -2.0f, MapSizeX / 2.0f, MinimapSizeX / -2.0f, MinimapSizeX / 2.0f);
+        //float y = mapToRange(playerPos.z, MapSizeY / -2.0f, MapSizeY / 2.0f, MinimapSizeY / -2.0f, MinimapSizeY / 2.0f);
 
-        float xx = playerPos.x / MapSizeX;
-        float yy = playerPos.z / MapSizeY;
+        float x = playerPos.x / MapSizeX;
+        float y = playerPos.z / MapSizeY;
 
-        xx *= MinimapSizeX;
-        yy *= MinimapSizeY;
+        x *= MinimapSizeX;
+        y *= MinimapSizeY;
 
-        return new Vector2(xx, yy);
+        return new Vector2(x, y);
     }
 
     public Transform GetRespawnWait()

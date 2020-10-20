@@ -69,10 +69,10 @@ public class Game : MonoBehaviour
 
         audioSource = GetComponent<AudioSource>();
 
-        WebGLInput.captureAllKeyboardInput = true;
-
         buttonHighSFX = ButtonHighSFX;
         buttonLowSFX = ButtonLowSFX;
+
+        //WebGLInput.captureAllKeyboardInput = true;
     }
 
     private static float mapToRange(float val, float r1s, float r1e, float r2s, float r2e)
